@@ -50,10 +50,10 @@ When the program is not in debug mode the locations of the ships are not display
 
 ## Tasks
 
-- [ ] https://github.com/olaitanade/RustBattleshipGame/issues/1
-- [ ] https://github.com/olaitanade/RustBattleshipGame/issues/2
-- [ ] https://github.com/olaitanade/RustBattleshipGame/issues/3
-- [ ] https://github.com/olaitanade/RustBattleshipGame/issues/4
-- [ ] https://github.com/olaitanade/RustBattleshipGame/issues/5
-- [ ] https://github.com/olaitanade/RustBattleshipGame/issues/6
+- [ ] Add game data structures https://github.com/olaitanade/RustBattleshipGame/issues/1
+- [ ] Add basic game runtime - Grid and Gameplay https://github.com/olaitanade/RustBattleshipGame/issues/2
+- [ ] Prevent the user from firing at the same square twice https://github.com/olaitanade/RustBattleshipGame/issues/3
+- [ ] Add Save Game Status https://github.com/olaitanade/RustBattleshipGame/issues/4
+- [ ] Add High Score Table https://github.com/olaitanade/RustBattleshipGame/issues/5
+- [ ] Add tests https://github.com/olaitanade/RustBattleshipGame/issues/6
 - [ ] https://github.com/olaitanade/RustBattleshipGame/issues/7
