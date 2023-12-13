@@ -2,6 +2,15 @@
 
 A rust battleship game on CLI based on the classic game Battleships.
 
+## Goal
+
+The main goal of this project is to use all I have learnt in the rust book and then use this game as a means to learn how to use runtime on different platforms and build architectures
+
+1. CLI based game
+1. Mobile and Desktop based game using Flutter, FFI, Protobuf and tokio many more ....
+1. Web assembly build on the web.
+1. Substrate pallet, Ink contract and blockchain with a runtime to support classic games like this as contracts.
+
 ## How it works
 
 The computer will randomly plack 5 different ships into a 10 by 10 grid. The player will then be able to select an individual square fro the grid to fire at. If a ship is on theat square the ship is sunk,the player gains points. After the player has had ten shots the game ends and the player's score is displayed. The game can end before ten moves if the player sinks all the ships.
@@ -51,4 +60,5 @@ If the user tries to enter a square they have already fired at they should be to
 The player should be able to stop the game part way through and the game status is saved. When the program exits and starts up again the player should be asked if they wish to start a new game or load a saved game.
 - [ ] Add High Score Table:
 The program should keep a list of names and high scores.  The high score table must be maintained when the program has been shut down and started up again and so it is able to save users from different sessions.
+- [ ] Add tests
 - [ ] Convert game runtime into a library crate with compatible interface for other User interface like Flutter for UI and Wasm on the web
