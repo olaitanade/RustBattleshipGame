@@ -25,8 +25,6 @@ Although in the game there is never any reason to display the grid.  The compute
 | Destroyer  | 2  | 8 |
 | Patrol boat  | 1  | 10 |
 
-So after the computer has allocated the ships the grid might look like this
-
 The game starts and the player has no points.  They are then asked which square they would like to shoot at (they can’t see the grid).  The program informs the player if they have missed or hit a ship.  If they have hit a ship they are told which ship and how many points it is worth. Once a ship has been hit it “sinks” and so cannot be hit again.
 
 ### Game End
@@ -52,13 +50,10 @@ When the program is not in debug mode the locations of the ships are not display
 
 ## Tasks
 
-- [ ] Add game data structures
-- [ ] Add basic game runtime - Grid and Gameplay
-- [ ] Prevent the user from firing at the same square twice
-If the user tries to enter a square they have already fired at they should be told they can’t fire at that square and the attempt does not count as one of their ten shots.
-- [ ] Add Save Game Status:
-The player should be able to stop the game part way through and the game status is saved. When the program exits and starts up again the player should be asked if they wish to start a new game or load a saved game.
-- [ ] Add High Score Table:
-The program should keep a list of names and high scores.  The high score table must be maintained when the program has been shut down and started up again and so it is able to save users from different sessions.
-- [ ] Add tests
-- [ ] Convert game runtime into a library crate with compatible interface for other User interface like Flutter for UI and Wasm on the web
+- [ ] https://github.com/olaitanade/RustBattleshipGame/issues/1
+- [ ] https://github.com/olaitanade/RustBattleshipGame/issues/2
+- [ ] https://github.com/olaitanade/RustBattleshipGame/issues/3
+- [ ] https://github.com/olaitanade/RustBattleshipGame/issues/4
+- [ ] https://github.com/olaitanade/RustBattleshipGame/issues/5
+- [ ] https://github.com/olaitanade/RustBattleshipGame/issues/6
+- [ ] https://github.com/olaitanade/RustBattleshipGame/issues/7
