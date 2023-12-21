@@ -13,7 +13,7 @@ The main goal of this project is to use all I have learnt in the rust book and t
 
 ## How it works
 
-The computer will randomly plack 5 different ships into a 10 by 10 grid. The player will then be able to select an individual square fro the grid to fire at. If a ship is on theat square the ship is sunk,the player gains points. After the player has had ten shots the game ends and the player's score is displayed. The game can end before ten moves if the player sinks all the ships.
+The computer will randomly place 5 different ships into a 10 by 10 grid. The player will then be able to select an individual square fro the grid to fire at. If a ship is on theat square the ship is sunk,the player gains points. After the player has had ten shots the game ends and the player's score is displayed. The game can end before ten moves if the player sinks all the ships.
 
 Although in the game there is never any reason to display the grid.  The computer randomly assigns five ships to the grid ensuring that they do not overlap. The ships can be placed horizontally or vertically but not diagonally.  The ships are all different sizes and worth different amount of points if shot as shown below.
 
@@ -50,10 +50,10 @@ When the program is not in debug mode the locations of the ships are not display
 
 ## Tasks
 
-- [ ] Add game data structures https://github.com/olaitanade/RustBattleshipGame/issues/1
-- [ ] Add basic game runtime - Grid and Gameplay https://github.com/olaitanade/RustBattleshipGame/issues/2
-- [ ] Prevent the user from firing at the same square twice https://github.com/olaitanade/RustBattleshipGame/issues/3
-- [ ] Add Save Game Status https://github.com/olaitanade/RustBattleshipGame/issues/4
-- [ ] Add High Score Table https://github.com/olaitanade/RustBattleshipGame/issues/5
-- [ ] Add tests https://github.com/olaitanade/RustBattleshipGame/issues/6
-- [ ] https://github.com/olaitanade/RustBattleshipGame/issues/7
+- [ ] Add game data structures <https://github.com/olaitanade/RustBattleshipGame/issues/1>
+- [ ] Add basic game runtime - Grid and Gameplay <https://github.com/olaitanade/RustBattleshipGame/issues/2>
+- [ ] Prevent the user from firing at the same square twice <https://github.com/olaitanade/RustBattleshipGame/issues/3>
+- [ ] Add Save Game Status <https://github.com/olaitanade/RustBattleshipGame/issues/4>
+- [ ] Add High Score Table <https://github.com/olaitanade/RustBattleshipGame/issues/5>
+- [ ] Add tests <https://github.com/olaitanade/RustBattleshipGame/issues/6>
+- [ ] <https://github.com/olaitanade/RustBattleshipGame/issues/7>

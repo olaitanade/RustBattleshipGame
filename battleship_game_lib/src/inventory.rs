@@ -1,5 +1,4 @@
 
-
 #[derive(Debug)]
 pub enum Orientation {
     Horizontal,
@@ -20,8 +19,6 @@ pub struct Square {
     pub origin: GridPoint,
     pub ship: Option<Ship>
 }
-
-
 
 #[derive(Debug)]
 pub struct GridPoint {
@@ -68,10 +65,25 @@ impl Ship {
 }
 
 
-
 #[derive(Debug)]
 pub struct Grid {
-    pub layout: [[Square; 10]; 10]
+    layout: [[Square; 10]; 10]
+}
+
+impl Grid {
+    pub fn build() -> Grid {
+        Self::initialize_layout()
+    }
+
+    pub fn build_from_layout(layout: [[Square; 10]; 10]) -> Grid {
+        Grid { layout }
+    }
+
+    fn initialize_layout() -> Grid{
+        let grid: Grid = Self::build_from_layout(layout);
+
+        grid
+    }
 }
 
 
