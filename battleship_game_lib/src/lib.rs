@@ -1,3 +1,3 @@
-pub mod inventory;
 pub mod runtime;
-pub mod storage;
+mod inventory;
+mod storage;
