@@ -1,11 +1,25 @@
-use std::fmt;
-
+use std::{fmt, collections::HashMap};
+use rand::{
+    distributions::{Distribution, Standard},
+    Rng, thread_rng,
+};
 ///Orientation of ship
 ///Horizontal, Vertical
 #[derive(Copy, Clone, Debug)]
 pub enum Orientation {
     Horizontal,
     Vertical,
+}
+
+impl Distribution<Orientation> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Orientation {
+        // match rng.gen_range(0, 3) { // rand 0.5, 0.6, 0.7
+        match rng.gen_range(0..=1) { // rand 0.8
+            0 => Orientation::Horizontal,
+            1 => Orientation::Vertical,
+            _ => Orientation::Horizontal
+        }
+    }
 }
 
 ///Ship types enum
@@ -231,14 +245,14 @@ impl <'a> Square<'a> {
 }
 
 ///Grid representation with a 10 by 10, 2 dimensional array as layout
-#[derive(Debug)]
-pub struct Grid<'a> {
-    layout: [[Square<'a>; 10]; 10]
+#[derive(Debug, Clone, Copy)]
+pub struct Grid<'g> {
+    layout: [[Square<'g>; 10]; 10]
 }
 
-impl <'a> Grid<'a> {
+impl <'g> Grid<'g> {
     ///generate a blank grid
-    pub fn build() -> Grid<'a> {
+    pub fn build() -> Grid<'g> {
         Self::initialize_layout()
     }
 
@@ -247,8 +261,32 @@ impl <'a> Grid<'a> {
         Grid { layout }
     }
 
-    ///Add a ship to the grid
-    pub fn add_ship(&mut self, ship: &'a Ship) -> bool {
+    pub fn allocate_ships(&'g mut self, ships:&'g mut HashMap<ShipType, Ship<'g>>) {
+        for (_key, ship) in ships.iter_mut() {
+            self.shuffle_ship_location(ship);
+        }
+    }
+    
+    fn shuffle_ship_location<'a>(&'a mut self, ship:&'g mut Ship)  -> bool {
+        loop {
+            let mut rng = thread_rng();
+            let x_axis = rng.gen_range(1..=10);
+            let y_axis = rng.gen_range(1..=10);
+
+            let orientation: Orientation = rand::random();
+
+            ship.origin = Some(GridPoint{ x: x_axis, y: y_axis });
+            ship.orientation = Some(orientation);
+
+            if self.verify_allocation(ship) {
+                break;
+            }
+        }
+        
+        self.add_ship(ship)
+    }
+
+    fn verify_allocation(&self, ship: &Ship) -> bool {
         match ship.get_orientation() {
             Orientation::Horizontal => {
                 if (ship.get_origin_x() + ship.get_size()) > 10 {
@@ -261,12 +299,6 @@ impl <'a> Grid<'a> {
                     if square.has_ship() {
                         return false;
                     }
-                }
-
-                for length in 0..ship.get_size() {
-                    let grid = GridPoint { x: ship.get_origin_x() + length, y: ship.get_origin_y() };
-                    let square = Square{ origin: grid, ship: Some(ship) };
-                    self.set_square(square);
                 }
             },
             Orientation::Vertical => {
@@ -281,7 +313,23 @@ impl <'a> Grid<'a> {
                         return false;
                     }
                 }
+            },
+        }
 
+        true
+    }
+
+    ///Add a ship to the grid
+    fn add_ship(&mut self, ship: &'g Ship) -> bool {
+        match ship.get_orientation() {
+            Orientation::Horizontal => {
+                for length in 0..ship.get_size() {
+                    let grid = GridPoint { x: ship.get_origin_x() + length, y: ship.get_origin_y() };
+                    let square = Square{ origin: grid, ship: Some(ship) };
+                    self.set_square(square);
+                }
+            },
+            Orientation::Vertical => {
                 for length in 0..ship.get_size() {
                     let grid = GridPoint { x: ship.get_origin_x(), y: ship.get_origin_y() + length };
                     let square = Square{ origin: grid, ship: Some(ship) };
@@ -294,7 +342,7 @@ impl <'a> Grid<'a> {
     }
 
     ///Remove a ship from the grid
-    fn remove_ship(&mut self, ship: &'a Ship) -> bool {
+    fn remove_ship<'a>(&mut self, ship: &'a Ship) -> bool {
         match ship.get_orientation() {
             Orientation::Horizontal => {
 
@@ -331,16 +379,16 @@ impl <'a> Grid<'a> {
         square.has_ship()
     }
 
-    fn get_square(&self, grid_point: GridPoint) -> &'a Square {
+    fn get_square<'a>(&self, grid_point: GridPoint) -> &'a Square {
         &self.layout[Self::get_arr_pos(grid_point.x)][Self::get_arr_pos(grid_point.y)]
     }
 
-    fn set_square(&mut self, square: Square<'a>) {
+    fn set_square(&mut self, square: Square<'g>) {
         self.layout[Self::get_arr_pos(square.origin.x)][Self::get_arr_pos(square.origin.y)] = square;
     }
 
 
-    fn initialize_layout() -> Grid<'a>{
+    fn initialize_layout<'a>() -> Grid<'a>{
         let mut layout: [[Square; 10]; 10] = [[Square::default(); 10]; 10];
         for (y, row) in layout.iter_mut().enumerate() {
             for (x, col) in row.iter_mut().enumerate() {
