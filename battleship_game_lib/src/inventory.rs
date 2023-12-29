@@ -9,7 +9,7 @@ pub enum Orientation {
 }
 
 ///Ship types enum
-#[derive(Debug,Clone,Copy,PartialEq)]
+#[derive(Debug,Clone,Copy,PartialEq, Eq, Hash)]
 pub enum ShipType {
     AircraftCarrier,
     Battleship,
@@ -56,7 +56,7 @@ pub struct Ship<'a> {
     ship_type: ShipType
 }
 
-impl Ship<'_> {
+impl <'a> Ship<'a> {
     /// Returns a ship with the type given
     ///
     /// # Arguments
@@ -71,7 +71,7 @@ impl Ship<'_> {
     /// use inventory::Ship;
     /// let ship = Ship::build(ShipType::AircraftCarrier);
     /// ```
-    pub fn build(ship_type: ShipType) -> Ship<'static> {
+    pub fn build(ship_type: ShipType) -> Ship<'a> {
         match ship_type {
             ShipType::AircraftCarrier => Ship { ship_type, origin: None, orientation: None, size: 5, points: 2, name: "Aircraft Carrier"},
             ShipType::Battleship => Ship { ship_type, origin: None, orientation: None, size: 4, points: 4, name: "Battleship"},
@@ -202,7 +202,7 @@ impl <'a> Square<'a> {
     /// use inventory::Square;
     /// let square = Square::build(GridPoint{x: 1, y: 2});
     /// ```
-    pub fn build(origin: GridPoint) -> Square<'static> {
+    pub fn build(origin: GridPoint) -> Square<'a> {
         Square { origin, ship: None }
     }
 
@@ -238,7 +238,7 @@ pub struct Grid<'a> {
 
 impl <'a> Grid<'a> {
     ///generate a blank grid
-    pub fn build() -> Grid<'static> {
+    pub fn build() -> Grid<'a> {
         Self::initialize_layout()
     }
 
@@ -255,7 +255,7 @@ impl <'a> Grid<'a> {
                     return false;
                 }
 
-                for length in (0..ship.get_size()) {
+                for length in 0..ship.get_size() {
                     let grid = GridPoint { x: ship.get_origin_x() + length, y: ship.get_origin_y() };
                     let square = self.get_square(grid);
                     if square.has_ship() {
@@ -263,7 +263,7 @@ impl <'a> Grid<'a> {
                     }
                 }
 
-                for length in (0..ship.get_size()) {
+                for length in 0..ship.get_size() {
                     let grid = GridPoint { x: ship.get_origin_x() + length, y: ship.get_origin_y() };
                     let square = Square{ origin: grid, ship: Some(ship) };
                     self.set_square(square);
@@ -274,7 +274,7 @@ impl <'a> Grid<'a> {
                     return false
                 }
 
-                for length in (0..ship.get_size()) {
+                for length in 0..ship.get_size() {
                     let grid = GridPoint { x: ship.get_origin_x(), y: ship.get_origin_y() + length };
                     let square = self.get_square(grid);
                     if square.has_ship() {
@@ -282,7 +282,7 @@ impl <'a> Grid<'a> {
                     }
                 }
 
-                for length in (0..ship.get_size()) {
+                for length in 0..ship.get_size() {
                     let grid = GridPoint { x: ship.get_origin_x(), y: ship.get_origin_y() + length };
                     let square = Square{ origin: grid, ship: Some(ship) };
                     self.set_square(square);
@@ -340,7 +340,7 @@ impl <'a> Grid<'a> {
     }
 
 
-    fn initialize_layout() -> Grid<'static>{
+    fn initialize_layout() -> Grid<'a>{
         let mut layout: [[Square; 10]; 10] = [[Square::default(); 10]; 10];
         for (y, row) in layout.iter_mut().enumerate() {
             for (x, col) in row.iter_mut().enumerate() {
