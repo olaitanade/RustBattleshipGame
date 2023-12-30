@@ -190,3 +190,13 @@ impl fmt::Display for Ship<'_> {
         write!(f, "Ship(name = {}, starting point = {}, orientation = {:?}, size = {}, points = {})", &self.name, &self.origin.as_ref().unwrap(), &self.orientation.as_ref().unwrap(), &self.size, &self.points)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_ship() {
+        
+    }
+}

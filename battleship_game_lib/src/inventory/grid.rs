@@ -91,6 +91,49 @@ impl <'g> Grid<'g> {
         }
     }
 
+    pub fn hit_ship(&mut self, grid_point: GridPoint) -> ShotStatus {
+        let square = self.layout[Self::get_arr_pos(grid_point.x)][Self::get_arr_pos(grid_point.y)];
+        if square.has_ship(){
+            let ship = square.ship.unwrap().clone();
+            self.remove_ship(&ship);
+            return ShotStatus::Hit(ship.clone());
+        }
+        ShotStatus::Miss
+    }
+
+    pub fn get_ship(&self, grid_point: GridPoint) -> &Option<&Ship> {
+        let square = self.get_square(grid_point);
+        square.get_ship()
+    }
+
+    fn get_square<'a>(&self, grid_point: GridPoint) -> &'a Square {
+        &self.layout[Self::get_arr_pos(grid_point.x)][Self::get_arr_pos(grid_point.y)]
+    }
+
+    fn set_square(&mut self, square: Square<'g>) {
+        self.layout[Self::get_arr_pos(square.origin.x)][Self::get_arr_pos(square.origin.y)] = square;
+    }
+
+
+    fn initialize_layout<'a>() -> Grid<'a>{
+        let mut layout: [[Square; 10]; 10] = [[Square::default(); 10]; 10];
+        for (y, row) in layout.iter_mut().enumerate() {
+            for (x, col) in row.iter_mut().enumerate() {
+                col.set_gridpoint(GridPoint { x: Self::get_grid_pos(x), y: Self::get_grid_pos(y) })
+            }
+        }
+        
+        Self::build_from_layout(layout)
+    }
+
+    fn get_arr_pos(axis: i32) -> usize {
+        (axis - 1).try_into().unwrap()
+    }
+
+    fn get_grid_pos(axis: usize) -> i32 {
+        (axis + 1).try_into().unwrap()
+    }
+
     fn shuffle_ship_location<'a>(&'a mut self, ship:&'g mut Ship)  -> bool {
         loop {
             let mut rng = thread_rng();
@@ -198,48 +241,6 @@ impl <'g> Grid<'g> {
         true
     }
 
-    pub fn hit_ship(&mut self, grid_point: GridPoint) -> ShotStatus {
-        let square = self.layout[Self::get_arr_pos(grid_point.x)][Self::get_arr_pos(grid_point.y)];
-        if square.has_ship(){
-            let ship = square.ship.unwrap().clone();
-            self.remove_ship(&ship);
-            return ShotStatus::Hit(ship.clone());
-        }
-        ShotStatus::Miss
-    }
-
-    pub fn get_ship(&self, grid_point: GridPoint) -> &Option<&Ship> {
-        let square = self.get_square(grid_point);
-        square.get_ship()
-    }
-
-    fn get_square<'a>(&self, grid_point: GridPoint) -> &'a Square {
-        &self.layout[Self::get_arr_pos(grid_point.x)][Self::get_arr_pos(grid_point.y)]
-    }
-
-    fn set_square(&mut self, square: Square<'g>) {
-        self.layout[Self::get_arr_pos(square.origin.x)][Self::get_arr_pos(square.origin.y)] = square;
-    }
-
-
-    fn initialize_layout<'a>() -> Grid<'a>{
-        let mut layout: [[Square; 10]; 10] = [[Square::default(); 10]; 10];
-        for (y, row) in layout.iter_mut().enumerate() {
-            for (x, col) in row.iter_mut().enumerate() {
-                col.set_gridpoint(GridPoint { x: Self::get_grid_pos(x), y: Self::get_grid_pos(y) })
-            }
-        }
-        
-        Self::build_from_layout(layout)
-    }
-
-    fn get_arr_pos(axis: i32) -> usize {
-        (axis - 1).try_into().unwrap()
-    }
-
-    fn get_grid_pos(axis: usize) -> i32 {
-        (axis + 1).try_into().unwrap()
-    }
 }
 
 

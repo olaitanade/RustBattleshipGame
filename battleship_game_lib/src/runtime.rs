@@ -2,6 +2,14 @@ use std::{collections::HashMap};
 
 use crate::inventory::{ship::{ShipType, Ship, GridPoint, self}, grid::Grid};
 
+#[derive(Debug,Clone,Copy,PartialEq, Eq, Hash)]
+pub enum ShotStatus<'a> {
+    Hit(Ship<'a>),
+    Miss,
+    Repeat
+}
+
+#[derive(Debug,Clone)]
 pub struct Session<'a> {
     pub ships: HashMap<ShipType, Ship<'a>>,
     pub shot_history: Vec<GridPoint>,
@@ -27,6 +35,10 @@ impl <'a> Session<'a> {
 
     pub fn start(&'a mut self){
         self.grid.allocate_ships(&mut self.ships);
+    }
+
+    pub fn get_player_name(&self) -> String {
+        self.player_name.clone()
     }
 
     pub fn display_ships_location(&self) -> String {
@@ -94,9 +106,12 @@ impl <'a> Session<'a> {
     
 }
 
-#[derive(Debug,Clone,Copy,PartialEq, Eq, Hash)]
-pub enum ShotStatus<'a> {
-    Hit(Ship<'a>),
-    Miss,
-    Repeat
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_ship() {
+        
+    }
 }
