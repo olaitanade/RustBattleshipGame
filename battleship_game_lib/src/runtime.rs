@@ -1,6 +1,6 @@
-use std::{collections::HashMap, borrow::BorrowMut, cell::RefCell};
-use rand::prelude::*;
-use crate::inventory::{self, Grid, Ship, ShipType, GridPoint, Orientation};
+use std::{collections::HashMap};
+
+use crate::inventory::{ship::{ShipType, Ship, GridPoint, self}, grid::Grid};
 
 pub struct Session<'a> {
     pub ships: HashMap<ShipType, Ship<'a>>,
@@ -13,19 +13,73 @@ pub struct Session<'a> {
 }
 
 impl <'a> Session<'a> {
-    // pub fn build(player_name: String) -> Session<'a>{
-    //     Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name, grid: RefCell::new(Grid::build()), debug: false, ships: Self::create_ships() }
-    // }
+    pub fn build(player_name: String) -> Session<'a>{
+        Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name, grid: Grid::build(), debug: false, ships: Self::create_ships() }
+    }
 
-    // pub fn build_with_grid(player_name: String, grid: Grid<'static>) -> Session<'a>{
-    //     Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name, grid: RefCell::new(grid), debug: false, ships: Self::create_ships() }
-    // }
+    pub fn build_with_grid(player_name: String, grid: Grid<'static>) -> Session<'a>{
+        Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name, grid, debug: false, ships: Self::create_ships() }
+    }
 
-    // pub fn build_with_debug(player_name: String, debug: bool) -> Session<'a>{
-    //     Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name: player_name, grid: RefCell::new(Grid::build()), debug, ships: Self::create_ships() }
-    // }
+    pub fn build_with_debug(player_name: String, debug: bool) -> Session<'a>{
+        Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name: player_name, grid: Grid::build(), debug, ships: Self::create_ships() }
+    }
 
-    pub fn create_ships() -> HashMap<ShipType, Ship<'a>> {
+    pub fn start(&'a mut self){
+        self.grid.allocate_ships(&mut self.ships);
+    }
+
+    pub fn display_ships_location(&self) -> String {
+        let mut display = String::new();
+
+        for (_key, ship) in self.ships.iter() {
+            display.push_str(&format!("{} \n", ship.get_debug_mode_string()))
+        }
+
+        display
+    }
+
+    pub fn is_any_ship_left(&self) -> bool{
+        for (_key, ship) in self.ships.iter() {
+            if !ship.is_destroyed() {
+                return true;
+            }
+        }
+        false
+    }
+
+    pub fn is_shot_available(&self) -> bool{
+        self.remaining_shots > 0
+    }
+
+    pub fn get_remaining_shots(&self) -> i32{
+        self.remaining_shots
+    }
+
+    pub fn get_destroyed_ships(&self) -> Vec<Ship>{
+        let ships: Vec<Ship> = self.ships.values().cloned().filter(|&ship| ship.is_destroyed()).collect();
+        ships
+    }
+
+    pub fn shoot_ship(&mut self, proj_loc: GridPoint) -> ShotStatus {
+        for grid in self.shot_history.iter() {
+            if grid.x == proj_loc.x && grid.y == proj_loc.y {
+                return ShotStatus::Repeat;
+            }
+        }
+        self.remaining_shots -= 1;
+        self.shot_history.push(proj_loc.clone());
+
+        match self.grid.hit_ship(proj_loc.clone()) {
+            ShotStatus::Hit(ship) => {
+                self.points += ship.get_point();
+                return ShotStatus::Hit(ship);
+            },
+            _ => return ShotStatus::Miss
+        }
+    }
+
+    fn create_ships() -> HashMap<ShipType, Ship<'a>> {
         let mut ship_yard = HashMap::new();
         
         ship_yard.insert(ShipType::AircraftCarrier, Ship::build(ShipType::AircraftCarrier));
@@ -37,39 +91,12 @@ impl <'a> Session<'a> {
         ship_yard
     }
 
-    pub fn start(){
+    
+}
 
-    }
-
-    pub fn display_ships_location(){
-
-    }
-
-    pub fn is_any_ship_left(){
-
-    }
-
-    pub fn is_shot_available(){
-
-    }
-
-    pub fn get_remaining_shots(){
-
-    }
-
-    pub fn get_destroyed_ships(){
-
-    }
-
-    pub fn shoot_ship(){
-
-    }
-
-    fn destroy_ship(){
-
-    }
-
-    fn allocate_ships_on_grid(&'a mut self){
-        self.grid.allocate_ships(&mut self.ships);
-    }
+#[derive(Debug,Clone,Copy,PartialEq, Eq, Hash)]
+pub enum ShotStatus<'a> {
+    Hit(Ship<'a>),
+    Miss,
+    Repeat
 }
