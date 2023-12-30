@@ -69,9 +69,10 @@ impl <'a> Square<'a> {
 }
 
 ///Grid representation with a 10 by 10, 2 dimensional array as layout
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Grid<'g> {
-    layout: [[Square<'g>; 10]; 10]
+    layout: [[Square<'g>; 10]; 10],
+    ships: HashMap<ShipType, Ship<'g>>,
 }
 
 impl <'g> Grid<'g> {
@@ -81,14 +82,16 @@ impl <'g> Grid<'g> {
     }
 
     ///generate a grid from a previously saved session
-    pub fn build_from_layout(layout: [[Square; 10]; 10]) -> Grid {
-        Grid { layout }
+    pub fn build_from_layout<'a>(layout: [[Square<'a>; 10]; 10], ships: HashMap<ShipType, Ship<'a>>) -> Grid<'a> {
+        Grid { layout, ships }
     }
 
-    pub fn allocate_ships(&'g mut self, ships:&'g mut HashMap<ShipType, Ship<'g>>) {
-        for (_key, ship) in ships.iter_mut() {
-            self.shuffle_ship_location(ship);
-        }
+    pub fn allocate_ships<'al>(&'al mut self) -> bool {
+        // for (_key, ship) in self.ships.iter_mut() {
+        //     let _res = self.shuffle_ship_location(ship);
+            
+        // }
+        true
     }
 
     pub fn hit_ship(&mut self, grid_point: GridPoint) -> ShotStatus {
@@ -110,7 +113,7 @@ impl <'g> Grid<'g> {
         &self.layout[Self::get_arr_pos(grid_point.x)][Self::get_arr_pos(grid_point.y)]
     }
 
-    fn set_square(&mut self, square: Square<'g>) {
+    fn set_square<'a: 'g>(&mut self, square: Square<'a>) {
         self.layout[Self::get_arr_pos(square.origin.x)][Self::get_arr_pos(square.origin.y)] = square;
     }
 
@@ -123,7 +126,9 @@ impl <'g> Grid<'g> {
             }
         }
         
-        Self::build_from_layout(layout)
+        let mut grid: Grid<'a> = Self::build_from_layout(layout, Self::create_ships());
+        grid.allocate_ships();
+        grid
     }
 
     fn get_arr_pos(axis: i32) -> usize {
@@ -134,7 +139,7 @@ impl <'g> Grid<'g> {
         (axis + 1).try_into().unwrap()
     }
 
-    fn shuffle_ship_location<'a>(&'a mut self, ship:&'g mut Ship)  -> bool {
+    fn shuffle_ship_location<'a: 'g>(&'a mut self, ship:&'a mut Ship)  -> bool {
         loop {
             let mut rng = thread_rng();
             let x_axis = rng.gen_range(1..=10);
@@ -150,7 +155,8 @@ impl <'g> Grid<'g> {
             }
         }
         
-        self.add_ship(ship)
+        let res = self.add_ship(ship);
+        res
     }
 
     fn verify_allocation(&self, ship: &Ship) -> bool {
@@ -187,7 +193,7 @@ impl <'g> Grid<'g> {
     }
 
     ///Add a ship to the grid
-    fn add_ship(&mut self, ship: &'g Ship) -> bool {
+    fn add_ship<'a: 'g>(&mut self, ship: &'a Ship) -> bool {
         match ship.get_orientation() {
             Orientation::Horizontal => {
                 for length in 0..ship.get_size() {
@@ -241,6 +247,17 @@ impl <'g> Grid<'g> {
         true
     }
 
+    fn create_ships() -> HashMap<ShipType, Ship<'static>> {
+        let mut ship_yard = HashMap::new();
+        
+        ship_yard.insert(ShipType::AircraftCarrier, Ship::build(ShipType::AircraftCarrier));
+        ship_yard.insert(ShipType::Battleship, Ship::build(ShipType::Battleship));
+        ship_yard.insert(ShipType::Submarine, Ship::build(ShipType::Submarine));
+        ship_yard.insert(ShipType::Destroyer, Ship::build(ShipType::Destroyer));
+        ship_yard.insert(ShipType::PatrolBoat, Ship::build(ShipType::PatrolBoat));
+
+        ship_yard
+    }
 }
 
 
@@ -289,6 +306,23 @@ mod tests {
         grid.remove_ship(&ship);
         let ship_removed = grid.remove_ship(&ship);
         assert_eq!(false,ship_removed)
+    }
+
+    #[test]
+    fn shuffle_ship() {
+        let mut grid = Grid::build();
+        let mut ac = Ship::build(ShipType::AircraftCarrier);
+        let mut bat = Ship::build(ShipType::Battleship);
+        let mut des = Ship::build(ShipType::Destroyer);
+        let mut boat = Ship::build(ShipType::PatrolBoat);
+        let mut sub = Ship::build(ShipType::Submarine);
+        grid.shuffle_ship_location(&mut ac);
+        // grid.shuffle_ship_location(&mut bat);
+        // grid.shuffle_ship_location(&mut des);
+        // grid.shuffle_ship_location(&mut boat);
+        // grid.shuffle_ship_location(&mut sub);
+        println!("{}",&ac.get_debug_mode_string());
+        //assert_eq!(false,ship_removed)
     }
 }
 

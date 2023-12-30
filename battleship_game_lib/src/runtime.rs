@@ -11,7 +11,7 @@ pub enum ShotStatus<'a> {
 
 #[derive(Debug,Clone)]
 pub struct Session<'a> {
-    pub ships: HashMap<ShipType, Ship<'a>>,
+    pub ships: HashMap<ShipType, Ship<'static>>,
     pub shot_history: Vec<GridPoint>,
     points: i32,
     remaining_shots: i32,
@@ -20,21 +20,17 @@ pub struct Session<'a> {
     debug: bool
 }
 
-impl <'a> Session<'a> {
-    pub fn build(player_name: String) -> Session<'a>{
+impl Session<'_> {
+    pub fn build(player_name: String) -> Self{
         Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name, grid: Grid::build(), debug: false, ships: Self::create_ships() }
     }
 
-    pub fn build_with_grid(player_name: String, grid: Grid<'static>) -> Session<'a>{
-        Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name, grid, debug: false, ships: Self::create_ships() }
+    pub fn build_from_store(player_name: String, grid: Grid<'static>, ships: HashMap<ShipType, Ship<'static>>) -> Self {
+        Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name, grid, debug: false, ships }
     }
 
-    pub fn build_with_debug(player_name: String, debug: bool) -> Session<'a>{
+    pub fn build_with_debug(player_name: String, debug: bool) -> Self{
         Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name: player_name, grid: Grid::build(), debug, ships: Self::create_ships() }
-    }
-
-    pub fn start(&'a mut self){
-        self.grid.allocate_ships(&mut self.ships);
     }
 
     pub fn get_player_name(&self) -> String {
@@ -91,7 +87,11 @@ impl <'a> Session<'a> {
         }
     }
 
-    fn create_ships() -> HashMap<ShipType, Ship<'a>> {
+    pub fn set_debug(&mut self, debug: bool){
+        self.debug = debug;
+    }
+
+    fn create_ships() -> HashMap<ShipType, Ship<'static>> {
         let mut ship_yard = HashMap::new();
         
         ship_yard.insert(ShipType::AircraftCarrier, Ship::build(ShipType::AircraftCarrier));
@@ -108,10 +108,14 @@ impl <'a> Session<'a> {
 
 #[cfg(test)]
 mod tests {
+    use std::cell::RefCell;
+
     use super::*;
 
     #[test]
-    fn test_ship() {
+    fn test_ship_allocation() {
+        let mut game_session = Session::build_with_debug(String::from("Adetayo"), true);
         
+        println!("{:?}", game_session.display_ships_location());
     }
 }
