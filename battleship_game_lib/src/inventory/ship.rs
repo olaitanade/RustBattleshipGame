@@ -1,4 +1,4 @@
-use std::{fmt};
+use std::{fmt, collections::HashMap};
 use rand::{
     distributions::{Distribution, Standard},
     Rng,
@@ -60,18 +60,18 @@ impl Default for GridPoint {
 }
 
 ///Ship
-#[derive(Debug,Clone,Copy, PartialEq, Eq, Hash)]
-pub struct Ship<'a> {
+#[derive(Debug,Clone, PartialEq, Eq, Hash)]
+pub struct Ship {
     pub origin: Option<GridPoint>,
     pub orientation: Option<Orientation>,
     size: i32,
     points: i32,
-    name: &'a str,
+    name: String,
     ship_type: ShipType,
     destroyed: bool
 }
 
-impl <'a> Ship<'a> {
+impl Ship {
     /// Returns a ship with the type given
     ///
     /// # Arguments
@@ -86,13 +86,13 @@ impl <'a> Ship<'a> {
     /// use inventory::Ship;
     /// let ship = Ship::build(ShipType::AircraftCarrier);
     /// ```
-    pub fn build(ship_type: ShipType) -> Ship<'a> {
+    pub fn build(ship_type: ShipType) -> Ship {
         match ship_type {
-            ShipType::AircraftCarrier => Ship { ship_type, origin: None, orientation: None, size: 5, points: 2, name: "Aircraft Carrier", destroyed: false},
-            ShipType::Battleship => Ship { ship_type, origin: None, orientation: None, size: 4, points: 4, name: "Battleship", destroyed: false},
-            ShipType::Submarine => Ship { ship_type, origin: None, orientation: None, size: 3, points: 6, name: "Submarine", destroyed: false },
-            ShipType::Destroyer => Ship { ship_type, origin: None, orientation: None, size: 2, points: 8, name: "Destroyer", destroyed: false},
-            ShipType::PatrolBoat => Ship { ship_type, origin: None, orientation: None, size: 1, points: 10, name: "Patrol Boat", destroyed: false},
+            ShipType::AircraftCarrier => Ship { ship_type, origin: None, orientation: None, size: 5, points: 2, name:String::from("Aircraft Carrier"), destroyed: false},
+            ShipType::Battleship => Ship { ship_type, origin: None, orientation: None, size: 4, points: 4, name: String::from("Battleship"), destroyed: false},
+            ShipType::Submarine => Ship { ship_type, origin: None, orientation: None, size: 3, points: 6, name: String::from("Submarine"), destroyed: false },
+            ShipType::Destroyer => Ship { ship_type, origin: None, orientation: None, size: 2, points: 8, name: String::from("Destroyer"), destroyed: false},
+            ShipType::PatrolBoat => Ship { ship_type, origin: None, orientation: None, size: 1, points: 10, name: String::from("Patrol Boat"), destroyed: false},
         }
     }
 
@@ -143,8 +143,8 @@ impl <'a> Ship<'a> {
     }
 
     ///get type of ship
-    pub fn get_type(&self) -> &ShipType {
-        &self.ship_type
+    pub fn get_type(&self) -> ShipType {
+        self.ship_type
     }
 
     ///get debug mode string of the ship
@@ -159,6 +159,18 @@ impl <'a> Ship<'a> {
         }
 
         output
+    }
+
+    pub fn create_ships() -> HashMap<ShipType, Self> {
+        let mut ship_yard = HashMap::new();
+        
+        ship_yard.insert(ShipType::AircraftCarrier, Ship::build(ShipType::AircraftCarrier));
+        ship_yard.insert(ShipType::Battleship, Ship::build(ShipType::Battleship));
+        ship_yard.insert(ShipType::Submarine, Ship::build(ShipType::Submarine));
+        ship_yard.insert(ShipType::Destroyer, Ship::build(ShipType::Destroyer));
+        ship_yard.insert(ShipType::PatrolBoat, Ship::build(ShipType::PatrolBoat));
+
+        ship_yard
     }
 
     ///get ship with horizontal orientation debug mode string
@@ -185,7 +197,7 @@ impl <'a> Ship<'a> {
 }
 
 ///ship cli display
-impl fmt::Display for Ship<'_> {
+impl fmt::Display for Ship {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Ship(name = {}, starting point = {}, orientation = {:?}, size = {}, points = {})", &self.name, &self.origin.as_ref().unwrap(), &self.orientation.as_ref().unwrap(), &self.size, &self.points)
     }

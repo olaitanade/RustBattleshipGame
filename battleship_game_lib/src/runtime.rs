@@ -2,16 +2,15 @@ use std::{collections::HashMap};
 
 use crate::inventory::{ship::{ShipType, Ship, GridPoint, self}, grid::Grid};
 
-#[derive(Debug,Clone,Copy,PartialEq, Eq, Hash)]
-pub enum ShotStatus<'a> {
-    Hit(Ship<'a>),
+#[derive(Debug,Clone,PartialEq, Eq, Hash)]
+pub enum ShotStatus {
+    Hit(Ship),
     Miss,
     Repeat
 }
 
 #[derive(Debug,Clone)]
 pub struct Session<'a> {
-    pub ships: HashMap<ShipType, Ship<'static>>,
     pub shot_history: Vec<GridPoint>,
     points: i32,
     remaining_shots: i32,
@@ -20,35 +19,38 @@ pub struct Session<'a> {
     debug: bool
 }
 
-impl Session<'_> {
-    pub fn build(player_name: String) -> Self{
-        Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name, grid: Grid::build(), debug: false, ships: Self::create_ships() }
+impl <'a> Session<'a> {
+
+    pub fn build_from_allocation<'s>(player_name: String, grid: Grid<'s>) -> Session<'s> {
+        Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name, grid, debug: false }
     }
 
-    pub fn build_from_store(player_name: String, grid: Grid<'static>, ships: HashMap<ShipType, Ship<'static>>) -> Self {
-        Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name, grid, debug: false, ships }
-    }
+    pub fn start<'s>(player_name: String, ships:&'s mut HashMap<ShipType, Ship>) -> Session<'s>{
+        let mut grid = Grid::build();
 
-    pub fn build_with_debug(player_name: String, debug: bool) -> Self{
-        Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name: player_name, grid: Grid::build(), debug, ships: Self::create_ships() }
+        for (_key, ship) in ships.iter_mut() {
+            grid.shuffle_ship_location(ship);
+        }
+
+        Self::build_from_allocation(player_name, grid)
     }
 
     pub fn get_player_name(&self) -> String {
         self.player_name.clone()
     }
 
-    pub fn display_ships_location(&self) -> String {
+    pub fn display_ships_location(ships: &HashMap<ShipType, Ship>) -> String {
         let mut display = String::new();
 
-        for (_key, ship) in self.ships.iter() {
+        for (_key, ship) in ships.iter() {
             display.push_str(&format!("{} \n", ship.get_debug_mode_string()))
         }
 
         display
     }
 
-    pub fn is_any_ship_left(&self) -> bool{
-        for (_key, ship) in self.ships.iter() {
+    pub fn is_any_ship_left(ships: &HashMap<ShipType, Ship>) -> bool{
+        for (_key, ship) in ships.iter() {
             if !ship.is_destroyed() {
                 return true;
             }
@@ -64,10 +66,10 @@ impl Session<'_> {
         self.remaining_shots
     }
 
-    pub fn get_destroyed_ships(&self) -> Vec<Ship>{
-        let ships: Vec<Ship> = self.ships.values().cloned().filter(|&ship| ship.is_destroyed()).collect();
-        ships
-    }
+    // pub fn get_destroyed_ships(&self) -> Vec<Ship>{
+    //     let ships: Vec<Ship> = self.ships.values().cloned().filter(|ship| ship.is_destroyed()).collect();
+    //     ships
+    // }
 
     pub fn shoot_ship(&mut self, proj_loc: GridPoint) -> ShotStatus {
         for grid in self.shot_history.iter() {
@@ -91,31 +93,23 @@ impl Session<'_> {
         self.debug = debug;
     }
 
-    fn create_ships() -> HashMap<ShipType, Ship<'static>> {
-        let mut ship_yard = HashMap::new();
-        
-        ship_yard.insert(ShipType::AircraftCarrier, Ship::build(ShipType::AircraftCarrier));
-        ship_yard.insert(ShipType::Battleship, Ship::build(ShipType::Battleship));
-        ship_yard.insert(ShipType::Submarine, Ship::build(ShipType::Submarine));
-        ship_yard.insert(ShipType::Destroyer, Ship::build(ShipType::Destroyer));
-        ship_yard.insert(ShipType::PatrolBoat, Ship::build(ShipType::PatrolBoat));
-
-        ship_yard
-    }
+    
 
     
 }
 
 #[cfg(test)]
 mod tests {
-    use std::cell::RefCell;
-
     use super::*;
 
     #[test]
     fn test_ship_allocation() {
-        let mut game_session = Session::build_with_debug(String::from("Adetayo"), true);
+        let mut ships = Ship::create_ships();
+        let mut game_session: Session<'_> = Session::start(String::from("Adetayo"), &mut ships);
         
-        println!("{:?}", game_session.display_ships_location());
+        
+        let hit_ship = game_session.shoot_ship(GridPoint { x: 1 , y: 2 });
+        println!("{:?}",hit_ship);
+        println!("{}", Session::display_ships_location(&ships));
     }
 }
