@@ -39,23 +39,12 @@ impl <'a> Session<'a> {
         self.player_name.clone()
     }
 
-    pub fn display_ships_location(ships: &HashMap<ShipType, Ship>) -> String {
-        let mut display = String::new();
-
-        for (_key, ship) in ships.iter() {
-            display.push_str(&format!("{} \n", ship.get_debug_mode_string()))
-        }
-
-        display
+    pub fn display_ships_location(&self) -> String {
+        self.grid.display_ships_location()
     }
 
-    pub fn is_any_ship_left(ships: &HashMap<ShipType, Ship>) -> bool{
-        for (_key, ship) in ships.iter() {
-            if !ship.is_destroyed() {
-                return true;
-            }
-        }
-        false
+    pub fn is_any_ship_left(&self) -> bool{
+        self.grid.is_any_ship_left()
     }
 
     pub fn is_shot_available(&self) -> bool{
@@ -66,10 +55,9 @@ impl <'a> Session<'a> {
         self.remaining_shots
     }
 
-    // pub fn get_destroyed_ships(&self) -> Vec<Ship>{
-    //     let ships: Vec<Ship> = self.ships.values().cloned().filter(|ship| ship.is_destroyed()).collect();
-    //     ships
-    // }
+    pub fn get_destroyed_ships(&self) -> Vec<Ship>{
+        self.grid.get_destroyed_ships()
+    }
 
     pub fn shoot_ship(&mut self, proj_loc: GridPoint) -> ShotStatus {
         for grid in self.shot_history.iter() {
@@ -92,14 +80,35 @@ impl <'a> Session<'a> {
     pub fn set_debug(&mut self, debug: bool){
         self.debug = debug;
     }
-
-    
-
-    
 }
+
+#[derive(Debug,Clone)]
+pub struct Play <'a>{
+    ships: HashMap<ShipType,Ship>,
+    session: Session<'a>,
+}
+
+impl Play<'_> {
+    pub fn build(player_name: String) -> Self {
+        let mut ships = Ship::create_ships();
+        let mut session: Session<'_> = Session::start(player_name, &mut ships);
+
+        Play { ships, session }
+    }
+
+    pub fn get_session_as_mut(&mut self) -> &mut Session {
+        &mut self.session
+    }
+
+    pub fn get_session_as_ref(&self) -> &Session {
+        &self.session
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     #[test]
@@ -108,8 +117,8 @@ mod tests {
         let mut game_session: Session<'_> = Session::start(String::from("Adetayo"), &mut ships);
         
         
-        let hit_ship = game_session.shoot_ship(GridPoint { x: 1 , y: 2 });
-        println!("{:?}",hit_ship);
-        println!("{}", Session::display_ships_location(&ships));
+        game_session.shoot_ship(GridPoint { x: 7 , y:  7});
+        
+        println!("{:?}", game_session.get_destroyed_ships());
     }
 }

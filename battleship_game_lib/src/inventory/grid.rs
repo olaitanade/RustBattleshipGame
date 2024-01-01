@@ -71,7 +71,8 @@ impl <'a> Square<'a> {
 ///Grid representation with a 10 by 10, 2 dimensional array as layout
 #[derive(Debug, Clone)]
 pub struct Grid<'g> {
-    layout: [[Square<'g>; 10]; 10]
+    layout: [[Square<'g>; 10]; 10],
+    ships: HashMap<ShipType,Ship>
 }
 
 impl <'g> Grid<'g> {
@@ -82,7 +83,7 @@ impl <'g> Grid<'g> {
 
     ///generate a grid from a previously saved session
     pub fn build_from_layout<'a>(layout: [[Square<'a>; 10]; 10]) -> Grid<'a> {
-        Grid { layout }
+        Grid { layout , ships: HashMap::new()}
     }
 
 
@@ -128,9 +129,32 @@ impl <'g> Grid<'g> {
         (axis + 1).try_into().unwrap()
     }
 
-    
+    pub fn display_ships_location(&self) -> String {
+        let mut display = String::new();
+
+        for (_key, ship) in self.ships.iter() {
+            display.push_str(&format!("{} \n", ship.get_debug_mode_string()))
+        }
+
+        display
+    }
+
+    pub fn is_any_ship_left(&self) -> bool{
+        for (_key, ship) in self.ships.iter() {
+            if !ship.is_destroyed() {
+                return true;
+            }
+        }
+        false
+    }
+
+    pub fn get_destroyed_ships(&self) -> Vec<Ship>{
+        let ships: Vec<Ship> = self.ships.values().cloned().filter(|ship| ship.is_destroyed()).collect();
+        ships
+    }
 
     pub fn shuffle_ship_location<'a: 'g>(&mut self, ship:&'a mut Ship)  -> bool {
+        
         loop {
             let mut rng = thread_rng();
             let x_axis = rng.gen_range(1..=10);
@@ -146,6 +170,9 @@ impl <'g> Grid<'g> {
             }
         }
         
+        let ship_clone = ship.clone();
+        self.ships.insert(ship_clone.get_type(), ship_clone);
+
         let res = self.add_ship(ship);
         res
     }
@@ -233,6 +260,7 @@ impl <'g> Grid<'g> {
                 }
             },
         }
+        self.ships.get_mut(&ship.get_type()).unwrap().destroy();
         ShotStatus::Hit(ship.clone())
     }
 }

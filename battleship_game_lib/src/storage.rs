@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::runtime::Session;
+use crate::runtime::{Session, Play};
 
 
 
@@ -9,29 +9,29 @@ pub struct Score {
 }
 
 pub struct Store<'a> {
-    sessions: HashMap<String, Session<'a>>,
+    plays: HashMap<String, Play<'a>>,
     scores: Vec<Score>,
 }
 
-impl Store<'_>{
-    pub fn build() -> Store<'static> {
-        Store { sessions: HashMap::new(), scores: Vec::new() }
+impl <'a> Store<'a>{
+    pub fn build() -> Store<'a> {
+        Store { plays: HashMap::new(), scores: Vec::new() }
     }
 
-    pub fn build_with(sessions: HashMap<String, Session>, scores: Vec<Score>) -> Store{
-        Store { sessions, scores }
+    pub fn build_with(plays: HashMap<String, Play>, scores: Vec<Score>) -> Store{
+        Store { plays, scores }
     }
 
-    pub fn save_session(&mut self, session: Session<'static>){
-        self.sessions.insert(session.get_player_name(), session);
+    pub fn save_play<'s: 'a>(&mut self, play: Play<'s>){
+        self.plays.insert(play.get_session_as_ref().get_player_name(), play);
     }
 
-    pub fn remove_session(&mut self, player_name: &String){
-        self.sessions.remove(player_name);
+    pub fn pop_play(&mut self, player_name: &String) -> Option<Play> {
+        self.plays.remove(player_name)
     }
 
-    pub fn get_session(&self, player_name: &String) -> Option<Session>{
-        self.sessions.get(player_name).cloned()
+    pub fn get_play(&self, player_name: &String) -> Option<Play>{
+        self.plays.get(player_name).cloned()
     }
 
     pub fn add_score(&mut self, score: Score){
@@ -42,14 +42,47 @@ impl Store<'_>{
         self.scores.retain(|x| x.point != score.point && x.name != score.name);
     }
 
+    pub fn get_player_names(&self) -> Vec<String> {
+        self.plays.keys().cloned().collect()
+    }
+
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::{inventory::ship::{Ship, GridPoint}, runtime::ShotStatus};
+
     use super::*;
 
     #[test]
-    fn test_ship() {
+    fn test_save_session() {
+        // let mut store = Store::build();
+        // let mut ships: HashMap<crate::inventory::ship::ShipType, Ship> = Ship::create_ships();
+        // let mut game_session: Session<'_> = Session::start(String::from("Adetayo"), &mut ships);
+
+        // game_session.shoot_ship(GridPoint { x: 2 , y:  2});
+        // game_session.shoot_ship(GridPoint { x: 3 , y:  3});
+        // game_session.shoot_ship(GridPoint { x: 4 , y:  4});
+        // game_session.shoot_ship(GridPoint { x: 5 , y:  5});
+        // game_session.shoot_ship(GridPoint { x: 6 , y:  6});
+        // game_session.shoot_ship(GridPoint { x: 7 , y:  7});
+        // game_session.shoot_ship(GridPoint { x: 8 , y:  8});
+
+
+        // println!("{}", game_session.get_remaining_shots());
+        // println!("{}", game_session.display_ships_location());
+        // println!("{:?}", game_session.get_destroyed_ships());
         
+        // println!("---------------------------------------");
+        // store.save_session(game_session);
+
+        // game_session = store.pop_session(&String::from("Adetayo")).unwrap();
+
+        // println!("---------------------------------------");
+        // println!("{}", game_session.get_remaining_shots());
+        // println!("{}", game_session.display_ships_location());
+        // println!("{:?}", game_session.get_destroyed_ships());
+
+
     }
 }
