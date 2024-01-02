@@ -8,13 +8,13 @@ pub struct Score {
     pub point: i32
 }
 
-pub struct Store<'a> {
-    plays: HashMap<String, Play<'a>>,
+pub struct Store {
+    plays: HashMap<String, Play>,
     scores: Vec<Score>,
 }
 
-impl <'a> Store<'a>{
-    pub fn build() -> Store<'a> {
+impl Store{
+    pub fn build() -> Store {
         Store { plays: HashMap::new(), scores: Vec::new() }
     }
 
@@ -22,7 +22,7 @@ impl <'a> Store<'a>{
         Store { plays, scores }
     }
 
-    pub fn save_play<'s: 'a>(&mut self, play: Play<'s>){
+    pub fn save_play(&mut self, play: Play){
         self.plays.insert(play.get_session_as_ref().get_player_name(), play);
     }
 

@@ -4,33 +4,33 @@ use crate::inventory::{ship::{ShipType, Ship, GridPoint, self}, grid::Grid};
 
 #[derive(Debug,Clone,PartialEq, Eq, Hash)]
 pub enum ShotStatus {
-    Hit(Ship),
+    Hit(ShipType, i32),
     Miss,
     Repeat
 }
 
 #[derive(Debug,Clone)]
-pub struct Session<'a> {
+pub struct Session {
     pub shot_history: Vec<GridPoint>,
+    pub debug: bool,
     points: i32,
     remaining_shots: i32,
     player_name: String,
-    grid: Grid<'a>,
-    debug: bool
+    grid: Grid
 }
 
-impl <'a> Session<'a> {
+impl Session {
 
-    pub fn build_from_allocation<'s>(player_name: String, grid: Grid<'s>) -> Session<'s> {
+    pub fn build() -> Session {
+        Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name: String::new(), grid: Grid::build(), debug: false }
+    }
+    pub fn build_from_allocation<'s>(player_name: String, grid: Grid) -> Session {
         Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name, grid, debug: false }
     }
 
-    pub fn start<'s>(player_name: String, ships:&'s mut HashMap<ShipType, Ship>) -> Session<'s>{
+    pub fn start<'s>(player_name: String) -> Session{
         let mut grid = Grid::build();
-
-        for (_key, ship) in ships.iter_mut() {
-            grid.shuffle_ship_location(ship);
-        }
+        grid.shuffle_ship_location();
 
         Self::build_from_allocation(player_name, grid)
     }
@@ -69,9 +69,9 @@ impl <'a> Session<'a> {
         self.shot_history.push(proj_loc.clone());
 
         match self.grid.hit_ship(proj_loc.clone()) {
-            ShotStatus::Hit(ship) => {
-                self.points += ship.get_point();
-                return ShotStatus::Hit(ship);
+            ShotStatus::Hit(ship, point) => {
+                self.points += point;
+                return ShotStatus::Hit(ship, point);
             },
             _ => return ShotStatus::Miss
         }
@@ -83,17 +83,13 @@ impl <'a> Session<'a> {
 }
 
 #[derive(Debug,Clone)]
-pub struct Play <'a>{
-    ships: HashMap<ShipType,Ship>,
-    session: Session<'a>,
+pub struct Play {
+    session: Session,
 }
 
-impl Play<'_> {
-    pub fn build(player_name: String) -> Self {
-        let mut ships = Ship::create_ships();
-        let mut session: Session<'_> = Session::start(player_name, &mut ships);
-
-        Play { ships, session }
+impl Play {
+    pub fn init(player_name: String) -> Play {
+       Play { session: Session::start(player_name)}
     }
 
     pub fn get_session_as_mut(&mut self) -> &mut Session {
@@ -109,16 +105,28 @@ impl Play<'_> {
 #[cfg(test)]
 mod tests {
 
+    use crate::GamePlay;
+
     use super::*;
 
     #[test]
     fn test_ship_allocation() {
         let mut ships = Ship::create_ships();
-        let mut game_session: Session<'_> = Session::start(String::from("Adetayo"), &mut ships);
+        let mut game_session = Session::start(String::from("Adetayo"));
         
         
         game_session.shoot_ship(GridPoint { x: 7 , y:  7});
         
         println!("{:?}", game_session.get_destroyed_ships());
+    }
+
+    #[test]
+    fn test_play() {
+        let mut game = GamePlay::initialize();
+        let play = game.start_new(String::from("Adetayo"));
+        
+        play.get_session_as_mut().shoot_ship(GridPoint { x: 7 , y:  7});
+        
+        println!("{:?}", play.get_session_as_ref().get_destroyed_ships());
     }
 }

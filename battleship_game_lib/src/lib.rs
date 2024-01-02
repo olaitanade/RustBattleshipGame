@@ -12,24 +12,24 @@ pub trait App {
     fn exit(&self);
 }
 
-pub struct GamePlay<'a> {
-    play: Option<Play<'a>>,
-    store: Store<'a>
+pub struct GamePlay{
+    play: Option<Play>,
+    store: Store
 }
 
-impl GamePlay<'_> {
+impl GamePlay {
     
     pub fn initialize()-> Self {
         GamePlay{ play: None, store: Store::build() }
     }
 
-    pub fn start_new(&mut self,player_name: String) -> &mut Play<'_> {
-        self.play = Some(Play::build(player_name));
+    pub fn start_new(&mut self, player_name: String) -> &mut Play {
+        self.play = Some(Play::init(player_name));
 
         self.play.as_mut().unwrap()
     }
 
-    pub fn load(&mut self,player_name: String) -> Option<&mut Play<'_>> {
+    pub fn load(&mut self, player_name: String) -> Option<&mut Play> {
         self.play = self.store.get_play(&player_name);
 
         self.play.as_mut()
@@ -39,7 +39,7 @@ impl GamePlay<'_> {
         self.store.get_player_names()
     }
 
-    pub fn delete(&mut self,player_name: String) -> Option<Play<'_>> {
+    pub fn delete(&mut self,player_name: String) -> Option<Play> {
         self.store.pop_play(&player_name)
     }
 
