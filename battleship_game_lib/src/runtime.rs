@@ -1,6 +1,33 @@
-use std::{collections::HashMap};
+use std::fmt;
+use crate::inventory::{ship::{ShipType, Ship}, grid::Grid};
 
-use crate::inventory::{ship::{ShipType, Ship, GridPoint, self}, grid::Grid};
+
+///Gridpoint representation of the 2 dimensional array
+/// x > 0, x < 11 ,1-10 inclusive
+/// y > 0, y < 11 ,1-10 inclusive
+#[derive(Debug,Clone,Copy, PartialEq, Eq, Hash)]
+pub struct GridPoint {
+    pub x: i32,
+    pub y: i32,
+}
+
+///Display GridPoint
+impl fmt::Display for GridPoint {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "GridPoint(x = {}, y = {})", &self.x, &self.y)
+    }
+}
+
+///Default struct value of GridPoint
+impl Default for GridPoint {
+    ///GridPoint default is all zeros
+    fn default() -> GridPoint {
+        GridPoint {
+            x: 1,
+            y: 1
+        }
+    }
+}
 
 #[derive(Debug,Clone,PartialEq, Eq, Hash)]
 pub enum ShotStatus {
@@ -11,8 +38,8 @@ pub enum ShotStatus {
 
 #[derive(Debug,Clone)]
 pub struct Session {
-    pub shot_history: Vec<GridPoint>,
     pub debug: bool,
+    shot_history: Vec<GridPoint>,
     points: i32,
     remaining_shots: i32,
     player_name: String,
@@ -77,8 +104,8 @@ impl Session {
         }
     }
 
-    pub fn set_debug(&mut self, debug: bool){
-        self.debug = debug;
+    pub fn get_points (&self) -> i32 {
+        self.points
     }
 }
 
@@ -111,7 +138,6 @@ mod tests {
 
     #[test]
     fn test_ship_allocation() {
-        let mut ships = Ship::create_ships();
         let mut game_session = Session::start(String::from("Adetayo"));
         
         

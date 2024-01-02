@@ -1,9 +1,9 @@
 use std::collections::HashMap;
-use std::{fmt};
+use std::fmt;
 use rand::{thread_rng, Rng};
-use crate::runtime::ShotStatus;
+use crate::runtime::{ShotStatus, GridPoint};
 
-use super::ship::{GridPoint, Orientation, Ship, ShipType};
+use super::ship::{Orientation, Ship, ShipType};
 
 
 ///Square
@@ -267,7 +267,7 @@ impl Grid {
 
 #[cfg(test)]
 mod tests {
-    use crate::inventory::ship::{GridPoint, Ship, ShipType};
+    use crate::inventory::ship::{Ship, ShipType};
 
     use super::*;
 

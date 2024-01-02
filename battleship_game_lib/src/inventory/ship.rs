@@ -4,6 +4,8 @@ use rand::{
     Rng,
 };
 
+use crate::runtime::GridPoint;
+
 ///Orientation of ship
 ///Horizontal, Vertical
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -30,33 +32,6 @@ pub enum ShipType {
     Submarine,
     Destroyer,
     PatrolBoat
-}
-
-///Gridpoint representation of the 2 dimensional array
-/// x > 0, x < 11 ,1-10 inclusive
-/// y > 0, y < 11 ,1-10 inclusive
-#[derive(Debug,Clone,Copy, PartialEq, Eq, Hash)]
-pub struct GridPoint {
-    pub x: i32,
-    pub y: i32,
-}
-
-///Display GridPoint
-impl fmt::Display for GridPoint {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "GridPoint(x = {}, y = {})", &self.x, &self.y)
-    }
-}
-
-///Default struct value of GridPoint
-impl Default for GridPoint {
-    ///GridPoint default is all zeros
-    fn default() -> GridPoint {
-        GridPoint {
-            x: 1,
-            y: 1
-        }
-    }
 }
 
 ///Ship
