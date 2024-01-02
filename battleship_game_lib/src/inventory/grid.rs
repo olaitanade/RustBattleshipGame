@@ -162,7 +162,7 @@ impl Grid {
             let mut orientation: Orientation = rand::random();
             
             loop {
-                if self.verify_allocation(ship.get_type(), GridPoint{ x: x_axis, y: y_axis }, orientation, ship.get_size()) {
+                if self.verify_allocation(GridPoint{ x: x_axis, y: y_axis }, orientation, ship.get_size()) {
                     self.add_ship(ship.get_type(), GridPoint{ x: x_axis, y: y_axis }, orientation, ship.get_size());
                     break;
                 }
@@ -175,7 +175,7 @@ impl Grid {
         
     }
 
-    fn verify_allocation(&self, ship_type: ShipType, grid_point: GridPoint, orientation: Orientation, size: i32) -> bool {
+    fn verify_allocation(&self, grid_point: GridPoint, orientation: Orientation, size: i32) -> bool {
         match orientation {
             Orientation::Horizontal => {
                 if (grid_point.x + size) > 10 {
