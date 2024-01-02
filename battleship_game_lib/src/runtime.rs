@@ -1,36 +1,63 @@
-use std::{collections::HashMap};
+use std::fmt;
+use crate::inventory::{ship::{ShipType, Ship}, grid::Grid};
 
-use crate::inventory::{ship::{ShipType, Ship, GridPoint, self}, grid::Grid};
+
+///Gridpoint representation of the 2 dimensional array
+/// x > 0, x < 11 ,1-10 inclusive
+/// y > 0, y < 11 ,1-10 inclusive
+#[derive(Debug,Clone,Copy, PartialEq, Eq, Hash)]
+pub struct GridPoint {
+    pub x: i32,
+    pub y: i32,
+}
+
+///Display GridPoint
+impl fmt::Display for GridPoint {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "GridPoint(x = {}, y = {})", &self.x, &self.y)
+    }
+}
+
+///Default struct value of GridPoint
+impl Default for GridPoint {
+    ///GridPoint default is all zeros
+    fn default() -> GridPoint {
+        GridPoint {
+            x: 1,
+            y: 1
+        }
+    }
+}
 
 #[derive(Debug,Clone,PartialEq, Eq, Hash)]
 pub enum ShotStatus {
-    Hit(Ship),
+    Hit(ShipType, i32),
     Miss,
     Repeat
 }
 
 #[derive(Debug,Clone)]
-pub struct Session<'a> {
-    pub shot_history: Vec<GridPoint>,
+pub struct Session {
+    pub debug: bool,
+    shot_history: Vec<GridPoint>,
     points: i32,
     remaining_shots: i32,
     player_name: String,
-    grid: Grid<'a>,
-    debug: bool
+    grid: Grid
 }
 
-impl <'a> Session<'a> {
+impl Session {
 
-    pub fn build_from_allocation<'s>(player_name: String, grid: Grid<'s>) -> Session<'s> {
+    pub fn build() -> Session {
+        Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name: String::new(), grid: Grid::build(), debug: false }
+    }
+    pub fn build_from_allocation<'s>(player_name: String, grid: Grid) -> Session {
         Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name, grid, debug: false }
     }
 
-    pub fn start<'s>(player_name: String, ships:&'s mut HashMap<ShipType, Ship>) -> Session<'s>{
+    pub fn start<'s>(player_name: String) -> Session{
         let mut grid = Grid::build();
-
-        for (_key, ship) in ships.iter_mut() {
-            grid.shuffle_ship_location(ship);
-        }
+        grid.shuffle_ship_location();
 
         Self::build_from_allocation(player_name, grid)
     }
@@ -39,23 +66,12 @@ impl <'a> Session<'a> {
         self.player_name.clone()
     }
 
-    pub fn display_ships_location(ships: &HashMap<ShipType, Ship>) -> String {
-        let mut display = String::new();
-
-        for (_key, ship) in ships.iter() {
-            display.push_str(&format!("{} \n", ship.get_debug_mode_string()))
-        }
-
-        display
+    pub fn display_ships_location(&self) -> String {
+        self.grid.display_ships_location()
     }
 
-    pub fn is_any_ship_left(ships: &HashMap<ShipType, Ship>) -> bool{
-        for (_key, ship) in ships.iter() {
-            if !ship.is_destroyed() {
-                return true;
-            }
-        }
-        false
+    pub fn is_any_ship_left(&self) -> bool{
+        self.grid.is_any_ship_left()
     }
 
     pub fn is_shot_available(&self) -> bool{
@@ -66,10 +82,9 @@ impl <'a> Session<'a> {
         self.remaining_shots
     }
 
-    // pub fn get_destroyed_ships(&self) -> Vec<Ship>{
-    //     let ships: Vec<Ship> = self.ships.values().cloned().filter(|ship| ship.is_destroyed()).collect();
-    //     ships
-    // }
+    pub fn get_destroyed_ships(&self) -> Vec<Ship>{
+        self.grid.get_destroyed_ships()
+    }
 
     pub fn shoot_ship(&mut self, proj_loc: GridPoint) -> ShotStatus {
         for grid in self.shot_history.iter() {
@@ -81,35 +96,63 @@ impl <'a> Session<'a> {
         self.shot_history.push(proj_loc.clone());
 
         match self.grid.hit_ship(proj_loc.clone()) {
-            ShotStatus::Hit(ship) => {
-                self.points += ship.get_point();
-                return ShotStatus::Hit(ship);
+            ShotStatus::Hit(ship, point) => {
+                self.points += point;
+                return ShotStatus::Hit(ship, point);
             },
             _ => return ShotStatus::Miss
         }
     }
 
-    pub fn set_debug(&mut self, debug: bool){
-        self.debug = debug;
+    pub fn get_points (&self) -> i32 {
+        self.points
+    }
+}
+
+#[derive(Debug,Clone)]
+pub struct Play {
+    session: Session,
+}
+
+impl Play {
+    pub fn init(player_name: String) -> Play {
+       Play { session: Session::start(player_name)}
     }
 
-    
+    pub fn get_session_as_mut(&mut self) -> &mut Session {
+        &mut self.session
+    }
 
-    
+    pub fn get_session_as_ref(&self) -> &Session {
+        &self.session
+    }
 }
+
 
 #[cfg(test)]
 mod tests {
+
+    use crate::GamePlay;
+
     use super::*;
 
     #[test]
     fn test_ship_allocation() {
-        let mut ships = Ship::create_ships();
-        let mut game_session: Session<'_> = Session::start(String::from("Adetayo"), &mut ships);
+        let mut game_session = Session::start(String::from("Adetayo"));
         
         
-        let hit_ship = game_session.shoot_ship(GridPoint { x: 1 , y: 2 });
-        println!("{:?}",hit_ship);
-        println!("{}", Session::display_ships_location(&ships));
+        game_session.shoot_ship(GridPoint { x: 7 , y:  7});
+        
+        println!("{:?}", game_session.get_destroyed_ships());
+    }
+
+    #[test]
+    fn test_play() {
+        let mut game = GamePlay::initialize();
+        let play = game.start_new(String::from("Adetayo"));
+        
+        play.get_session_as_mut().shoot_ship(GridPoint { x: 7 , y:  7});
+        
+        println!("{:?}", play.get_session_as_ref().get_destroyed_ships());
     }
 }
