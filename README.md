@@ -1,4 +1,5 @@
 # RustBattleshipGame
+![battleship copy](https://github.com/olaitanade/RustBattleshipGame/assets/11635588/2dacb1d9-590b-42c2-bfda-20254dd506e2)
 
 A rust battleship game on CLI based on the classic game Battleships.
 
