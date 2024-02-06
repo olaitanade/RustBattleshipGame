@@ -99,7 +99,7 @@ impl Square {
 /// 
 ///
 /// pub struct Grid {
-///   layout: [[Square; 10]; 10],
+///   layout: [Square; 100],
 ///   ships: HashMap<ShipType,Ship>
 /// }  
 ///
@@ -110,7 +110,7 @@ impl Square {
 /// ```
 #[derive(Debug, Clone)]
 pub struct Grid {
-    layout: [[Square; 10]; 10],
+    layout: [Square; 100],
     ships: HashMap<ShipType,Ship>
 }
 
@@ -122,7 +122,7 @@ impl Grid {
 
     /// Generate a grid from layout (a previously saved session)
     /// Argument: `layout: [[Square; 10]; 10]``
-    pub fn build_from_layout(layout: [[Square; 10]; 10]) -> Grid {
+    pub fn build_from_layout(layout: [Square; 100]) -> Grid {
         Grid { layout , ships: Ship::create_ships()}
     }
 
@@ -130,7 +130,7 @@ impl Grid {
     /// Argument: `grid_point: GridPoint`
     /// Return: `ShotStatus`
     pub fn hit_ship(&mut self, grid_point: GridPoint) -> ShotStatus {
-        let square = self.layout[Self::get_arr_pos(grid_point.x)][Self::get_arr_pos(grid_point.y)];
+        let square = self.layout[Self::get_index(Self::get_arr_pos(grid_point.x), Self::get_arr_pos(grid_point.y))];
         if square.has_ship(){
             let ship_type = square.ship.unwrap();
             let ship = self.ships.get(&ship_type).unwrap();
@@ -199,23 +199,34 @@ impl Grid {
 
 
     fn get_square<'a>(&self, grid_point: GridPoint) -> &Square {
-        &self.layout[Self::get_arr_pos(grid_point.x)][Self::get_arr_pos(grid_point.y)]
+        &self.layout[Self::get_index(Self::get_arr_pos(grid_point.x), Self::get_arr_pos(grid_point.y))]
     }
 
     fn set_square(&mut self, square: Square) {
-        self.layout[Self::get_arr_pos(square.origin.x)][Self::get_arr_pos(square.origin.y)] = square;
+        self.layout[Self::get_index(Self::get_arr_pos(square.origin.x), Self::get_arr_pos(square.origin.y))] = square;
     }
 
 
     fn initialize_layout() -> Grid{
-        let mut layout: [[Square; 10]; 10] = [[Square::default(); 10]; 10];
-        for (y, row) in layout.iter_mut().enumerate() {
-            for (x, col) in row.iter_mut().enumerate() {
-                col.set_gridpoint(GridPoint { x: Self::get_grid_pos(x), y: Self::get_grid_pos(y) })
-            }
+        let mut layout: [Square;100] = [Square::default(); 100];
+        for (n, cell) in layout.iter_mut().enumerate() {
+            cell.set_gridpoint(GridPoint { x: Self::get_grid_pos(Self::cal_pos_x(n)), y: Self::get_grid_pos(Self::cal_pos_y(n)) })
+            
         }
         
         Self::build_from_layout(layout)
+    }
+
+    fn get_index(row: usize, column: usize) -> usize {
+        row * 10 + column
+    }
+
+    fn cal_pos_y(i: usize) -> usize {
+        i/10
+    }
+
+    fn cal_pos_x(i: usize) -> usize {
+        i%10
     }
 
     fn get_arr_pos(axis: i32) -> usize {
