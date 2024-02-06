@@ -7,3 +7,7 @@ edition = "2021"
 
 [dependencies]
 battleship_game_lib = { path = "../battleship_game_lib" }
+crossterm = "0.27.0"
+ratatui = "0.24.0"
+anyhow = "1.0.79"
+

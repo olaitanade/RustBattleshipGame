@@ -6,7 +6,26 @@ use crate::runtime::{ShotStatus, GridPoint};
 use super::ship::{Orientation, Ship, ShipType};
 
 
-///Square
+/// Square
+///
+///
+/// ```
+/// 
+///
+/// pub struct Square {
+///   origin: GridPoint,
+///   ship: Option<ShipType>
+/// }  
+///
+/// impl fmt::Display for Square {
+///     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+///         write!(f, "Square (origin = {}, ship = {})", self.origin, self.get_ship_string())
+///     }
+/// }
+///
+/// let square = Square::build(GridPoint{x: 1, y: 2});
+///
+/// ```
 #[derive(Debug,Clone,Copy)]
 pub struct Square {
     origin: GridPoint,
@@ -19,7 +38,7 @@ impl fmt::Display for Square {
     }
 }
 
-///Default struct value of Square
+/// Default struct value of Square
 impl Default for Square {
     fn default() -> Self {
         Square::build(GridPoint::default())
@@ -44,22 +63,27 @@ impl Square {
         Square { origin, ship: None }
     }
 
+    /// Set origin of square
     pub fn set_gridpoint(&mut self, origin: GridPoint) {
         self.origin = origin;
     }
 
+    /// Get ShipType on square if any, returns Option<ShipType> 
     pub fn get_ship(&self) -> Option<ShipType> {
         self.ship
     }
 
+    /// Set ShipType on square
     pub fn set_ship(&mut self,ship: ShipType){
         self.ship = Some(ship);
     }
 
+    /// Has ShipType on square
     pub fn has_ship(&self) -> bool{
         self.ship.is_some()
     }
 
+    /// Get ShipType string display on square
     pub fn get_ship_string(&self) -> String {
         match &self.ship {
             Some(ship) => format!("{:?}",ship),
@@ -68,7 +92,22 @@ impl Square {
     }
 }
 
-///Grid representation with a 10 by 10, 2 dimensional array as layout
+/// Grid representation with a 10 by 10, 2 dimensional array as layout
+///
+///
+/// ```
+/// 
+///
+/// pub struct Grid {
+///   layout: [[Square; 10]; 10],
+///   ships: HashMap<ShipType,Ship>
+/// }  
+///
+///
+///
+/// let grid = Grid::build();
+///
+/// ```
 #[derive(Debug, Clone)]
 pub struct Grid {
     layout: [[Square; 10]; 10],
@@ -76,17 +115,20 @@ pub struct Grid {
 }
 
 impl Grid {
-    ///generate a blank grid
+    /// Generate a blank grid
     pub fn build() -> Grid {
         Self::initialize_layout()
     }
 
-    ///generate a grid from a previously saved session
-    pub fn build_from_layout<'a>(layout: [[Square; 10]; 10]) -> Grid {
+    /// Generate a grid from layout (a previously saved session)
+    /// Argument: `layout: [[Square; 10]; 10]``
+    pub fn build_from_layout(layout: [[Square; 10]; 10]) -> Grid {
         Grid { layout , ships: Ship::create_ships()}
     }
 
-
+    /// Hit ship
+    /// Argument: `grid_point: GridPoint`
+    /// Return: `ShotStatus`
     pub fn hit_ship(&mut self, grid_point: GridPoint) -> ShotStatus {
         let square = self.layout[Self::get_arr_pos(grid_point.x)][Self::get_arr_pos(grid_point.y)];
         if square.has_ship(){
@@ -97,10 +139,64 @@ impl Grid {
         ShotStatus::Miss
     }
 
+    /// Get ship
+    /// Argument: `grid_point: GridPoint`
+    /// Return: `Option<ShipType>`
     pub fn get_ship(&self, grid_point: GridPoint) -> Option<ShipType> {
         let square = self.get_square(grid_point);
         square.get_ship()
     }
+
+    /// Get ship locations
+    pub fn display_ships_location(&self) -> String {
+        let mut display = String::new();
+
+        for (_key, ship) in self.ships.iter() {
+            display.push_str(&format!("{} \n", ship.get_debug_mode_string()))
+        }
+
+        display
+    }
+
+
+    /// Is any ship left
+    pub fn is_any_ship_left(&self) -> bool{
+        for (_key, ship) in self.ships.iter() {
+            if !ship.is_destroyed() {
+                return true;
+            }
+        }
+        false
+    }
+
+    /// Get destroyed ships
+    pub fn get_destroyed_ships(&self) -> Vec<Ship>{
+        let ships: Vec<Ship> = self.ships.values().cloned().filter(|ship| ship.is_destroyed()).collect();
+        ships
+    }
+
+    /// Shuffle ship locations randomly on the grid
+    pub fn shuffle_ship_location<'a>(&'a mut self){
+        for (_key, ship) in self.ships.clone().iter_mut() {
+            let mut rng = thread_rng();
+            let mut x_axis = rng.gen_range(1..=10);
+            let mut y_axis = rng.gen_range(1..=10);
+            let mut orientation: Orientation = rand::random();
+            
+            loop {
+                if self.verify_allocation(GridPoint{ x: x_axis, y: y_axis }, orientation, ship.get_size()) {
+                    self.add_ship(ship.get_type(), GridPoint{ x: x_axis, y: y_axis }, orientation, ship.get_size());
+                    break;
+                }
+
+                x_axis = rng.gen_range(1..=10);
+                y_axis = rng.gen_range(1..=10);
+                orientation = rand::random();
+            }
+        }
+        
+    }
+
 
     fn get_square<'a>(&self, grid_point: GridPoint) -> &Square {
         &self.layout[Self::get_arr_pos(grid_point.x)][Self::get_arr_pos(grid_point.y)]
@@ -128,51 +224,6 @@ impl Grid {
 
     fn get_grid_pos(axis: usize) -> i32 {
         (axis + 1).try_into().unwrap()
-    }
-
-    pub fn display_ships_location(&self) -> String {
-        let mut display = String::new();
-
-        for (_key, ship) in self.ships.iter() {
-            display.push_str(&format!("{} \n", ship.get_debug_mode_string()))
-        }
-
-        display
-    }
-
-    pub fn is_any_ship_left(&self) -> bool{
-        for (_key, ship) in self.ships.iter() {
-            if !ship.is_destroyed() {
-                return true;
-            }
-        }
-        false
-    }
-
-    pub fn get_destroyed_ships(&self) -> Vec<Ship>{
-        let ships: Vec<Ship> = self.ships.values().cloned().filter(|ship| ship.is_destroyed()).collect();
-        ships
-    }
-
-    pub fn shuffle_ship_location<'a>(&'a mut self){
-        for (_key, ship) in self.ships.clone().iter_mut() {
-            let mut rng = thread_rng();
-            let mut x_axis = rng.gen_range(1..=10);
-            let mut y_axis = rng.gen_range(1..=10);
-            let mut orientation: Orientation = rand::random();
-            
-            loop {
-                if self.verify_allocation(GridPoint{ x: x_axis, y: y_axis }, orientation, ship.get_size()) {
-                    self.add_ship(ship.get_type(), GridPoint{ x: x_axis, y: y_axis }, orientation, ship.get_size());
-                    break;
-                }
-
-                x_axis = rng.gen_range(1..=10);
-                y_axis = rng.gen_range(1..=10);
-                orientation = rand::random();
-            }
-        }
-        
     }
 
     fn verify_allocation(&self, grid_point: GridPoint, orientation: Orientation, size: i32) -> bool {
