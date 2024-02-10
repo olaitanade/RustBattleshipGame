@@ -6,7 +6,26 @@ use crate::runtime::{ShotStatus, GridPoint};
 use super::ship::{Orientation, Ship, ShipType};
 
 
-///Square
+/// Square
+///
+///
+/// ```
+/// 
+///
+/// pub struct Square {
+///   origin: GridPoint,
+///   ship: Option<ShipType>
+/// }  
+///
+/// impl fmt::Display for Square {
+///     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+///         write!(f, "Square (origin = {}, ship = {})", self.origin, self.get_ship_string())
+///     }
+/// }
+///
+/// let square = Square::build(GridPoint{x: 1, y: 2});
+///
+/// ```
 #[derive(Debug,Clone,Copy)]
 pub struct Square {
     origin: GridPoint,
@@ -19,7 +38,7 @@ impl fmt::Display for Square {
     }
 }
 
-///Default struct value of Square
+/// Default struct value of Square
 impl Default for Square {
     fn default() -> Self {
         Square::build(GridPoint::default())
@@ -44,22 +63,27 @@ impl Square {
         Square { origin, ship: None }
     }
 
+    /// Set origin of square
     pub fn set_gridpoint(&mut self, origin: GridPoint) {
         self.origin = origin;
     }
 
+    /// Get ShipType on square if any, returns Option<ShipType> 
     pub fn get_ship(&self) -> Option<ShipType> {
         self.ship
     }
 
+    /// Set ShipType on square
     pub fn set_ship(&mut self,ship: ShipType){
         self.ship = Some(ship);
     }
 
+    /// Has ShipType on square
     pub fn has_ship(&self) -> bool{
         self.ship.is_some()
     }
 
+    /// Get ShipType string display on square
     pub fn get_ship_string(&self) -> String {
         match &self.ship {
             Some(ship) => format!("{:?}",ship),
@@ -68,27 +92,45 @@ impl Square {
     }
 }
 
-///Grid representation with a 10 by 10, 2 dimensional array as layout
+/// Grid representation with a 10 by 10, 2 dimensional array as layout
+///
+///
+/// ```
+/// 
+///
+/// pub struct Grid {
+///   layout: [Square; 100],
+///   ships: HashMap<ShipType,Ship>
+/// }  
+///
+///
+///
+/// let grid = Grid::build();
+///
+/// ```
 #[derive(Debug, Clone)]
 pub struct Grid {
-    layout: [[Square; 10]; 10],
+    layout: [Square; 100],
     ships: HashMap<ShipType,Ship>
 }
 
 impl Grid {
-    ///generate a blank grid
+    /// Generate a blank grid
     pub fn build() -> Grid {
         Self::initialize_layout()
     }
 
-    ///generate a grid from a previously saved session
-    pub fn build_from_layout<'a>(layout: [[Square; 10]; 10]) -> Grid {
+    /// Generate a grid from layout (a previously saved session)
+    /// Argument: `layout: [[Square; 10]; 10]``
+    pub fn build_from_layout(layout: [Square; 100]) -> Grid {
         Grid { layout , ships: Ship::create_ships()}
     }
 
-
+    /// Hit ship
+    /// Argument: `grid_point: GridPoint`
+    /// Return: `ShotStatus`
     pub fn hit_ship(&mut self, grid_point: GridPoint) -> ShotStatus {
-        let square = self.layout[Self::get_arr_pos(grid_point.x)][Self::get_arr_pos(grid_point.y)];
+        let square = self.layout[Self::get_index(Self::get_arr_pos(grid_point.x), Self::get_arr_pos(grid_point.y))];
         if square.has_ship(){
             let ship_type = square.ship.unwrap();
             let ship = self.ships.get(&ship_type).unwrap();
@@ -97,39 +139,15 @@ impl Grid {
         ShotStatus::Miss
     }
 
+    /// Get ship
+    /// Argument: `grid_point: GridPoint`
+    /// Return: `Option<ShipType>`
     pub fn get_ship(&self, grid_point: GridPoint) -> Option<ShipType> {
         let square = self.get_square(grid_point);
         square.get_ship()
     }
 
-    fn get_square<'a>(&self, grid_point: GridPoint) -> &Square {
-        &self.layout[Self::get_arr_pos(grid_point.x)][Self::get_arr_pos(grid_point.y)]
-    }
-
-    fn set_square(&mut self, square: Square) {
-        self.layout[Self::get_arr_pos(square.origin.x)][Self::get_arr_pos(square.origin.y)] = square;
-    }
-
-
-    fn initialize_layout() -> Grid{
-        let mut layout: [[Square; 10]; 10] = [[Square::default(); 10]; 10];
-        for (y, row) in layout.iter_mut().enumerate() {
-            for (x, col) in row.iter_mut().enumerate() {
-                col.set_gridpoint(GridPoint { x: Self::get_grid_pos(x), y: Self::get_grid_pos(y) })
-            }
-        }
-        
-        Self::build_from_layout(layout)
-    }
-
-    fn get_arr_pos(axis: i32) -> usize {
-        (axis - 1).try_into().unwrap()
-    }
-
-    fn get_grid_pos(axis: usize) -> i32 {
-        (axis + 1).try_into().unwrap()
-    }
-
+    /// Get ship locations
     pub fn display_ships_location(&self) -> String {
         let mut display = String::new();
 
@@ -140,6 +158,8 @@ impl Grid {
         display
     }
 
+
+    /// Is any ship left
     pub fn is_any_ship_left(&self) -> bool{
         for (_key, ship) in self.ships.iter() {
             if !ship.is_destroyed() {
@@ -149,11 +169,13 @@ impl Grid {
         false
     }
 
+    /// Get destroyed ships
     pub fn get_destroyed_ships(&self) -> Vec<Ship>{
         let ships: Vec<Ship> = self.ships.values().cloned().filter(|ship| ship.is_destroyed()).collect();
         ships
     }
 
+    /// Shuffle ship locations randomly on the grid
     pub fn shuffle_ship_location<'a>(&'a mut self){
         for (_key, ship) in self.ships.clone().iter_mut() {
             let mut rng = thread_rng();
@@ -173,6 +195,46 @@ impl Grid {
             }
         }
         
+    }
+
+
+    fn get_square<'a>(&self, grid_point: GridPoint) -> &Square {
+        &self.layout[Self::get_index(Self::get_arr_pos(grid_point.x), Self::get_arr_pos(grid_point.y))]
+    }
+
+    fn set_square(&mut self, square: Square) {
+        self.layout[Self::get_index(Self::get_arr_pos(square.origin.x), Self::get_arr_pos(square.origin.y))] = square;
+    }
+
+
+    fn initialize_layout() -> Grid{
+        let mut layout: [Square;100] = [Square::default(); 100];
+        for (n, cell) in layout.iter_mut().enumerate() {
+            cell.set_gridpoint(GridPoint { x: Self::get_grid_pos(Self::cal_pos_x(n)), y: Self::get_grid_pos(Self::cal_pos_y(n)) })
+            
+        }
+        
+        Self::build_from_layout(layout)
+    }
+
+    fn get_index(row: usize, column: usize) -> usize {
+        row * 10 + column
+    }
+
+    fn cal_pos_y(i: usize) -> usize {
+        i/10
+    }
+
+    fn cal_pos_x(i: usize) -> usize {
+        i%10
+    }
+
+    fn get_arr_pos(axis: i32) -> usize {
+        (axis - 1).try_into().unwrap()
+    }
+
+    fn get_grid_pos(axis: usize) -> i32 {
+        (axis + 1).try_into().unwrap()
     }
 
     fn verify_allocation(&self, grid_point: GridPoint, orientation: Orientation, size: i32) -> bool {

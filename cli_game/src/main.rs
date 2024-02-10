@@ -1,18 +1,90 @@
-use battleship_game_lib::{GamePlay, runtime::GridPoint};
+use anyhow::Result;
+use battleship_game_lib::{runtime::GridPoint, GamePlay};
+use crossterm::{
+    event::{self, Event::Key, KeyCode::Char},
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
+use ratatui::{
+    prelude::{CrosstermBackend, Frame, Terminal},
+    widgets::Paragraph,
+};
 
-fn main() {
-    let mut game = GamePlay::initialize();
-    let play = game.start_new(String::from("Adetayo"));
-
-    play.get_session_as_mut().shoot_ship(GridPoint { x: 1 , y:  1});
-    play.get_session_as_mut().shoot_ship(GridPoint { x: 2 , y:  2});
-    play.get_session_as_mut().shoot_ship(GridPoint { x: 3 , y:  3});
-    play.get_session_as_mut().shoot_ship(GridPoint { x: 4 , y:  4});
-    play.get_session_as_mut().shoot_ship(GridPoint { x: 5 , y:  5});
-    play.get_session_as_mut().shoot_ship(GridPoint { x: 6 , y:  6});
-    play.get_session_as_mut().shoot_ship(GridPoint { x: 7 , y:  7});
-    play.get_session_as_mut().shoot_ship(GridPoint { x: 8 , y:  8});
-    play.get_session_as_mut().shoot_ship(GridPoint { x: 9 , y:  9});
-    
-    println!("{:?}", play.get_session_as_ref().get_destroyed_ships());
-}
+fn startup() -> Result<()> {
+    enable_raw_mode()?;
+    execute!(std::io::stderr(), EnterAlternateScreen)?;
+    Ok(())
+  }
+  
+  fn shutdown() -> Result<()> {
+    execute!(std::io::stderr(), LeaveAlternateScreen)?;
+    disable_raw_mode()?;
+    Ok(())
+  }
+  
+  // App state
+  struct App {
+    counter: i64,
+    should_quit: bool,
+  }
+  
+  // App ui render function
+  fn ui(app: &App, f: &mut Frame) {
+    f.render_widget(Paragraph::new(format!("Counter: {}", app.counter)), f.size());
+  }
+  
+  // App update function
+  fn update(app: &mut App) -> Result<()> {
+    if event::poll(std::time::Duration::from_millis(250))? {
+      if let Key(key) = event::read()? {
+        if key.kind == event::KeyEventKind::Press {
+          match key.code {
+            Char('j') => app.counter += 1,
+            Char('k') => app.counter -= 1,
+            Char('q') => app.should_quit = true,
+            _ => {},
+          }
+        }
+      }
+    }
+    Ok(())
+  }
+  
+  fn run() -> Result<()> {
+    // ratatui terminal
+    let mut t = Terminal::new(CrosstermBackend::new(std::io::stderr()))?;
+  
+    // application state
+    let mut app = App { counter: 0, should_quit: false };
+  
+    loop {
+      // application update
+      update(&mut app)?;
+  
+      // application render
+      t.draw(|f| {
+        ui(&app, f);
+      })?;
+  
+      // application exit
+      if app.should_quit {
+        break;
+      }
+    }
+  
+    Ok(())
+  }
+  
+  fn main() -> Result<()> {
+    // setup terminal
+    startup()?;
+  
+    let result = run();
+  
+    // teardown terminal before unwrapping Result of app run
+    shutdown()?;
+  
+    result?;
+  
+    Ok(())
+  }

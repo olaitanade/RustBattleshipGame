@@ -3,10 +3,12 @@ use rand::{
     distributions::{Distribution, Standard},
     Rng,
 };
-
 use crate::runtime::GridPoint;
 
-///Orientation of ship
+/////////////////////////////////////////////////////////////////////////
+/// Orientation of ship
+/////////////////////////////////////////////////////////////////////////
+///
 ///Horizontal, Vertical
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Orientation {
@@ -24,7 +26,11 @@ impl Distribution<Orientation> for Standard {
     }
 }
 
-///Ship types enum
+/////////////////////////////////////////////////////////////////////////
+/// Types of Ship
+/////////////////////////////////////////////////////////////////////////
+///
+///AircraftCarrier, Battleship, Submarine, Destroyer, PatrolBoat
 #[derive(Debug,Clone,Copy,PartialEq, Eq, Hash)]
 pub enum ShipType {
     AircraftCarrier,
@@ -34,7 +40,18 @@ pub enum ShipType {
     PatrolBoat
 }
 
+/////////////////////////////////////////////////////////////////////////
 ///Ship
+/////////////////////////////////////////////////////////////////////////
+///
+///Fields
+///pub origin: Option<GridPoint>,
+///pub orientation: Option<Orientation>,
+///size: i32,
+///points: i32,
+///name: String,
+///ship_type: ShipType,
+///destroyed: bool
 #[derive(Debug,Clone, PartialEq, Eq, Hash)]
 pub struct Ship {
     pub origin: Option<GridPoint>,
