@@ -8,6 +8,9 @@ edition = "2021"
 [dependencies]
 battleship_game_lib = { path = "../battleship_game_lib" }
 crossterm = "0.27.0"
-ratatui = "0.24.0"
+ratatui = { version = "0.26.0", features = ["all-widgets"]}
 anyhow = "1.0.79"
+ron = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1.0"
 
