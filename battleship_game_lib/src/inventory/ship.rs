@@ -1,3 +1,5 @@
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
 use std::{fmt, collections::HashMap};
 use rand::{
     distributions::{Distribution, Standard},
@@ -10,6 +12,7 @@ use crate::runtime::GridPoint;
 /////////////////////////////////////////////////////////////////////////
 ///
 ///Horizontal, Vertical
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Orientation {
     Horizontal,
@@ -31,6 +34,7 @@ impl Distribution<Orientation> for Standard {
 /////////////////////////////////////////////////////////////////////////
 ///
 ///AircraftCarrier, Battleship, Submarine, Destroyer, PatrolBoat
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Debug,Clone,Copy,PartialEq, Eq, Hash)]
 pub enum ShipType {
     AircraftCarrier,
@@ -52,6 +56,7 @@ pub enum ShipType {
 ///name: String,
 ///ship_type: ShipType,
 ///destroyed: bool
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Debug,Clone, PartialEq, Eq, Hash)]
 pub struct Ship {
     pub origin: Option<GridPoint>,

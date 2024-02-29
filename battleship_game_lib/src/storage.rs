@@ -1,3 +1,5 @@
+
+
 use std::collections::HashMap;
 use crate::runtime::Play;
 
@@ -7,6 +9,7 @@ pub struct Score {
     pub name: String,
     pub point: i32
 }
+
 
 pub struct Store {
     plays: HashMap<String, Play>,

@@ -1,7 +1,9 @@
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
 use std::collections::HashMap;
 use std::fmt;
 use rand::{thread_rng, Rng};
-use crate::runtime::{ShotStatus, GridPoint};
+use crate::runtime::{GridPoint, Shot, ShotStatus};
 
 use super::ship::{Orientation, Ship, ShipType};
 
@@ -26,6 +28,7 @@ use super::ship::{Orientation, Ship, ShipType};
 /// let square = Square::build(GridPoint{x: 1, y: 2});
 ///
 /// ```
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Debug,Clone,Copy)]
 pub struct Square {
     origin: GridPoint,
@@ -108,6 +111,7 @@ impl Square {
 /// let grid = Grid::build();
 ///
 /// ```
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Debug, Clone)]
 pub struct Grid {
     layout: [Square; 100],
@@ -128,15 +132,15 @@ impl Grid {
 
     /// Hit ship
     /// Argument: `grid_point: GridPoint`
-    /// Return: `ShotStatus`
-    pub fn hit_ship(&mut self, grid_point: GridPoint) -> ShotStatus {
+    /// Return: `Shot`
+    pub fn hit_ship(&mut self, grid_point: GridPoint) -> Shot {
         let square = self.layout[Self::get_index(Self::get_arr_pos(grid_point.x), Self::get_arr_pos(grid_point.y))];
         if square.has_ship(){
             let ship_type = square.ship.unwrap();
             let ship = self.ships.get(&ship_type).unwrap();
             return self.remove_ship(ship_type, grid_point, ship.orientation.unwrap(), ship.get_size());
         }
-        ShotStatus::Miss
+        Shot{ status: ShotStatus::Miss, ship_type: None, point: None }
     }
 
     /// Get ship
@@ -294,7 +298,7 @@ impl Grid {
     }
 
     ///Remove a ship from the grid
-    fn remove_ship<'a>(&'a mut self, ship_type: ShipType, grid_point: GridPoint, orientation: Orientation, size: i32) -> ShotStatus {
+    fn remove_ship<'a>(&'a mut self, ship_type: ShipType, grid_point: GridPoint, orientation: Orientation, size: i32) -> Shot {
         match orientation {
             Orientation::Horizontal => {
 
@@ -302,7 +306,7 @@ impl Grid {
                     let grid = GridPoint { x: grid_point.x + length, y: grid_point.y };
                     let square = self.get_square(grid);
                     if !square.has_ship() || square.get_ship().unwrap() != ship_type {
-                        return ShotStatus::Miss;
+                        return Shot{ status: ShotStatus::Miss, ship_type: None, point: None};
                     }
 
                     self.set_square(Square{ origin: grid, ship: None });
@@ -314,7 +318,7 @@ impl Grid {
                     let grid = GridPoint { x: grid_point.x, y: grid_point.y + length };
                     let square = self.get_square(grid);
                     if !square.has_ship() || square.get_ship().unwrap() != ship_type {
-                        return ShotStatus::Miss;
+                        return Shot{ status: ShotStatus::Miss, ship_type: None, point: None};
                     }
 
                     self.set_square(Square{ origin: grid, ship: None });
@@ -322,7 +326,7 @@ impl Grid {
             },
         }
         self.ships.get_mut(&ship_type).unwrap().destroy();
-        ShotStatus::Hit(ship_type, self.ships.get(&ship_type).unwrap().get_point())
+        Shot{ status: ShotStatus::Hit, ship_type: Some(ship_type), point: Some(self.ships.get(&ship_type).unwrap().get_point()) }
     }
 }
 
@@ -340,7 +344,7 @@ mod tests {
         ship.origin = Some(GridPoint { x: 1, y: 1 });
         grid.add_ship(ship.get_type(),GridPoint { x: 1, y: 1 }, Orientation::Horizontal, ship.get_size());
         let hit_ship = grid.hit_ship(ship.origin.unwrap());
-        assert_eq!(ShotStatus::Hit(ship.get_type(), ship.get_point()),hit_ship)
+        assert_eq!(ShotStatus::Hit,hit_ship.status)
     }
 
     #[test]
@@ -350,7 +354,7 @@ mod tests {
         ship.origin = Some(GridPoint { x: 1, y: 1 });
         grid.add_ship(ship.get_type(),GridPoint { x: 1, y: 1 }, Orientation::Horizontal, ship.get_size());
         let hit_ship = grid.hit_ship(GridPoint { x: 1 , y: 2 });
-        assert_eq!(ShotStatus::Miss,hit_ship)
+        assert_eq!(ShotStatus::Miss,hit_ship.status)
     }
 
     #[test]
@@ -360,7 +364,7 @@ mod tests {
         ship.origin = Some(GridPoint { x: 1, y: 1 });
         grid.add_ship(ship.get_type(),GridPoint { x: 1, y: 1 }, Orientation::Horizontal, ship.get_size());
         let ship_removed = grid.remove_ship(ship.get_type(),GridPoint { x: 1, y: 1 }, Orientation::Horizontal, ship.get_size());
-        assert_eq!(ShotStatus::Hit(ship.get_type(), ship.get_point()),ship_removed)
+        assert_eq!(ship.get_type(),ship_removed.ship_type.unwrap())
     }
 
     #[test]
@@ -371,7 +375,7 @@ mod tests {
         grid.add_ship(ship.get_type(),GridPoint { x: 1, y: 1 }, Orientation::Horizontal, ship.get_size());
         grid.remove_ship(ship.get_type(),GridPoint { x: 1, y: 1 }, Orientation::Horizontal, ship.get_size());
         let ship_removed = grid.remove_ship(ship.get_type(),GridPoint { x: 1, y: 1 }, Orientation::Horizontal, ship.get_size());
-        assert_eq!(ShotStatus::Miss,ship_removed)
+        assert_eq!(ShotStatus::Miss,ship_removed.status)
     }
 
     #[test]
@@ -388,7 +392,7 @@ mod tests {
         println!("{}", ac.get_debug_mode_string());
         println!("{}", bat.get_debug_mode_string());
         let hit_ship = grid.hit_ship(ac.origin.unwrap());
-        assert_eq!(ShotStatus::Hit(ac.get_type(), ac.get_point()),hit_ship)
+        assert_eq!(ac.get_type(), hit_ship.ship_type.unwrap())
     }
 
     #[test]

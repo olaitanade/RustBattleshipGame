@@ -1,3 +1,6 @@
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
+
 use std::fmt;
 use crate::inventory::{ship::{ShipType, Ship}, grid::Grid};
 
@@ -5,6 +8,7 @@ use crate::inventory::{ship::{ShipType, Ship}, grid::Grid};
 ///Gridpoint representation of the 2 dimensional array
 /// x > 0, x < 11 ,1-10 inclusive
 /// y > 0, y < 11 ,1-10 inclusive
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Debug,Clone,Copy, PartialEq, Eq, Hash)]
 pub struct GridPoint {
     pub x: i32,
@@ -18,6 +22,7 @@ impl fmt::Display for GridPoint {
     }
 }
 
+
 ///Default struct value of GridPoint
 impl Default for GridPoint {
     ///GridPoint default is all zeros
@@ -29,13 +34,29 @@ impl Default for GridPoint {
     }
 }
 
-#[derive(Debug,Clone,PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
+impl GridPoint {
+    pub fn new(x: i32, y: i32) -> GridPoint {
+        GridPoint{x,y}
+    }
+}
+
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[derive(Debug,Clone, Copy,PartialEq, Eq, Hash)]
 pub enum ShotStatus {
-    Hit(ShipType, i32),
+    Hit,
     Miss,
     Repeat
 }
 
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
+pub struct Shot {
+    pub status: ShotStatus,
+    pub ship_type: Option<ShipType>,
+    pub point: Option<i32>
+}
+
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Debug,Clone)]
 pub struct Session {
     pub debug: bool,
@@ -46,16 +67,17 @@ pub struct Session {
     grid: Grid
 }
 
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl Session {
 
     pub fn build() -> Session {
         Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name: String::new(), grid: Grid::build(), debug: false }
     }
-    pub fn build_from_allocation<'s>(player_name: String, grid: Grid) -> Session {
+    pub fn build_from_allocation(player_name: String, grid: Grid) -> Session {
         Session { points: 0, shot_history: Vec::new(), remaining_shots: 10, player_name, grid, debug: false }
     }
 
-    pub fn start<'s>(player_name: String) -> Session{
+    pub fn start(player_name: String) -> Session{
         let mut grid = Grid::build();
         grid.shuffle_ship_location();
 
@@ -86,21 +108,21 @@ impl Session {
         self.grid.get_destroyed_ships()
     }
 
-    pub fn shoot_ship(&mut self, proj_loc: GridPoint) -> ShotStatus {
+    pub fn shoot_ship(&mut self, proj_loc: GridPoint) -> Shot {
         for grid in self.shot_history.iter() {
             if grid.x == proj_loc.x && grid.y == proj_loc.y {
-                return ShotStatus::Repeat;
+                return Shot{ status: ShotStatus::Repeat, ship_type: None, point: None };
             }
         }
         self.remaining_shots -= 1;
         self.shot_history.push(proj_loc.clone());
 
         match self.grid.hit_ship(proj_loc.clone()) {
-            ShotStatus::Hit(ship, point) => {
-                self.points += point;
-                return ShotStatus::Hit(ship, point);
+            Shot{ status: ShotStatus::Hit, ship_type, point} => {
+                self.points += point.unwrap();
+                return Shot{ status: ShotStatus::Hit, ship_type, point};
             },
-            _ => return ShotStatus::Miss
+            _ => Shot{ status: ShotStatus::Miss, ship_type: None, point: None }
         }
     }
 
@@ -109,22 +131,36 @@ impl Session {
     }
 }
 
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Debug,Clone)]
 pub struct Play {
     session: Session,
 }
 
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl Play {
     pub fn init(player_name: String) -> Play {
        Play { session: Session::start(player_name)}
     }
 
+    #[cfg(not(feature = "wasm-bindgen"))]
     pub fn get_session_as_mut(&mut self) -> &mut Session {
         &mut self.session
     }
 
+    #[cfg(feature = "wasm-bindgen")]
+    pub fn get_session_as_mut(&mut self) -> Session {
+        self.session.clone()
+    }
+
+    #[cfg(not(feature = "wasm-bindgen"))]
     pub fn get_session_as_ref(&self) -> &Session {
         &self.session
+    }
+
+    #[cfg(feature = "wasm-bindgen")]
+    pub fn get_session_as_ref(&self) -> Session {
+        self.session.clone()
     }
 }
 

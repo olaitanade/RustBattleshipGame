@@ -12,6 +12,9 @@ The main goal of this project is to use all I have learnt in the rust book and t
 1. Web assembly build on the web.
 1. Substrate pallet, Ink contract and blockchain with a runtime to support classic games like this as contracts.
 
+## Build
+- wasm-pack build --features wasm
+
 ## Tasks
 
 - [ ] Add game data structures <https://github.com/olaitanade/RustBattleshipGame/issues/1>
