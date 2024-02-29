@@ -1,35 +1,57 @@
-use runtime::{Play};
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
+
+use runtime::Play;
 use storage::Store;
 
 pub mod runtime;
 mod inventory;
 mod storage;
 
+
 pub trait App {
     fn exit(&self);
 }
 
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub struct GamePlay{
     play: Option<Play>,
     store: Store
 }
 
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl GamePlay {
     
     pub fn initialize()-> Self {
         GamePlay{ play: None, store: Store::build() }
     }
 
+    #[cfg(not(feature = "wasm-bindgen"))]
     pub fn start_new(&mut self, player_name: String) -> &mut Play {
         self.play = Some(Play::init(player_name));
 
         self.play.as_mut().unwrap()
     }
 
+    #[cfg(feature = "wasm-bindgen")]
+    pub fn start_new(&mut self, player_name: String) -> Play {
+        self.play = Some(Play::init(player_name));
+
+        self.play.clone().unwrap()
+    }
+
+    #[cfg(not(feature = "wasm-bindgen"))]
     pub fn load(&mut self, player_name: String) -> Option<&mut Play> {
         self.play = self.store.get_play(&player_name);
 
         self.play.as_mut()
+    }
+
+    #[cfg(feature = "wasm-bindgen")]
+    pub fn load(&mut self, player_name: String) -> Play {
+        self.play = self.store.get_play(&player_name);
+
+        self.play.clone().unwrap()
     }
 
     pub fn list_saved(&self) -> Vec<String> {
