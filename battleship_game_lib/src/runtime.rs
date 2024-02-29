@@ -35,6 +35,13 @@ impl Default for GridPoint {
 }
 
 #[cfg_attr(feature = "wasm", wasm_bindgen)]
+impl GridPoint {
+    pub fn new(x: i32, y: i32) -> GridPoint {
+        GridPoint{x,y}
+    }
+}
+
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Debug,Clone, Copy,PartialEq, Eq, Hash)]
 pub enum ShotStatus {
     Hit,
